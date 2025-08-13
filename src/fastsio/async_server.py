@@ -847,6 +847,7 @@ class AsyncServer(base_server.BaseServer):
 
                 if ann is Data:
                     di_kwargs.setdefault(pname, args[-1])
+                    continue
 
                 try:
                     is_model = isinstance(ann, type) and issubclass(ann, _PydanticBaseModel)  # type: ignore[arg-type]
