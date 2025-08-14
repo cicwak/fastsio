@@ -18,7 +18,7 @@ from .server import Server
 from .simple_client import SimpleClient
 from .tornado import get_tornado_handler
 from .router import RouterSIO
-from .types import SocketID, Environ, Auth, Reason, Data
+from .types import SocketID, Environ, Auth, Reason, Data, Event
 from .zmq_manager import ZmqManager
 
 __all__ = [
@@ -51,4 +51,5 @@ __all__ = [
     "Auth",
     "Reason",
     "Data",
+    "Event",
 ]

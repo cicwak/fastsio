@@ -15,6 +15,24 @@ web browsers) and a server. The official implementations of the client
 and server components are written in JavaScript. This package provides
 Python implementations of both, each with standard and asyncio variants.
 
+Why fastsio vs python-socketio and FastAPI?
+-------------------------------------------
+
+- fastsio builds on the same protocol foundations as python-socketio, but aims for:
+  - **strong typing** and a **FastAPI-like DX** (dependency injection, Pydantic validation)
+  - **lightweight router** organization via ``RouterSIO``
+  - minimal overhead and compatibility with your existing ASGI/WSGI stack
+- If you already like FastAPI’s ergonomics, fastsio brings a similar style to Socket.IO:
+  annotate your handler parameters and get automatic injection/validation.
+
+Quick comparison to FastAPI-style handlers
+------------------------------------------
+
+- **Dependency injection**: annotate with ``AsyncServer``, ``SocketID``, ``Environ``, ``Auth``, your Pydantic models
+  and fastsio injects/validates them automatically.
+- **Routers**: structure your handlers using ``RouterSIO``, similar to FastAPI’s routers.
+- **Validation**: single-argument payloads can be validated into Pydantic models automatically.
+
 Version compatibility
 ---------------------
 
@@ -159,15 +177,15 @@ Uvicorn web server:
             return web.Response(text=f.read(), content_type='text/html')
 
     @sio.event
-    def connect(sid, environ):
+    def connect(sid: SocketID, environ): Environ:
         print("connect ", sid)
 
     @sio.event
-    async def chat_message(sid, data):
+    async def chat_message(sid: SocketID, data: Data):
         print("message ", data)
 
     @sio.event
-    def disconnect(sid):
+    def disconnect(sid: SocketID):
         print('disconnect ', sid)
 
     app.router.add_static('/static', 'static')

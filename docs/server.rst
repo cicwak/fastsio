@@ -1,5 +1,5 @@
-The Socket.IO Server
-====================
+The Socket.IO Server (fastsio)
+==============================
 
 This package contains two Socket.IO servers:
 
@@ -17,14 +17,14 @@ Installation
 To install the Socket.IO server along with its dependencies, use the following
 command::
 
-    pip install python-socketio
+    pip install fastsio
 
 Creating a Server Instance
 --------------------------
 
 A Socket.IO server is an instance of class :class:`socketio.Server`::
 
-    import socketio
+    import fastsio as socketio
 
     # create a Socket.IO server
     sio = socketio.Server()
@@ -32,7 +32,7 @@ A Socket.IO server is an instance of class :class:`socketio.Server`::
 For asyncio based servers, the :class:`socketio.AsyncServer` class provides
 the same functionality, but in a coroutine friendly format::
 
-    import socketio
+    import fastsio as socketio
 
     # create a Socket.IO server
     sio = socketio.AsyncServer()
@@ -193,11 +193,11 @@ are emitted by clients. To register a handler for an event, the
 :func:`socketio.Server.event` or :func:`socketio.Server.on` decorators are used::
 
     @sio.event
-    def my_event(sid, data):
+    def my_event(sid: SocketID, data: Data):
         pass
 
     @sio.on('my custom event')
-    def another_event(sid, data):
+    def another_event(sid: SocketID, data: Data):
         pass
 
 In the first example the event name is obtained from the name of the handler
@@ -208,7 +208,7 @@ illegal in function names, such as spaces.
 For asyncio servers, event handlers can optionally be given as coroutines::
 
     @sio.event
-    async def my_event(sid, data):
+    async def my_event(sid: SocketID, data: Data):
         pass
 
 The ``sid`` argument that is passed to all handlers is the Socket.IO session
@@ -222,11 +222,11 @@ The ``connect`` and ``disconnect`` events are special; they are invoked
 automatically when a client connects or disconnects from the server::
 
     @sio.event
-    def connect(sid, environ, auth):
+    def connect(sid: SocketID, environ: Environ, auth: Auth):
         print('connect ', sid)
 
     @sio.event
-    def disconnect(sid, reason):
+    def disconnect(sid: SocketID, reason: Reason):
         print('disconnect ', sid, reason)
 
 The ``connect`` event is an ideal place to perform user authentication, and
@@ -247,14 +247,14 @@ and all of its arguments will be sent to the client with the rejection
 message::
 
     @sio.event
-    def connect(sid, environ, auth):
+    def connect(sid: SocketID, environ: Environ, auth: Auth):
         raise ConnectionRefusedError('authentication failed')
 
 The disconnect handler receives the ``sid`` assigned to the client and a
 ``reason``, which provides the cause of the disconnection::
 
     @sio.event
-    def disconnect(sid, reason):
+    def disconnect(sid: SocketID, reason):
         if reason == sio.reason.CLIENT_DISCONNECT:
             print('the client disconnected')
         elif reason == sio.reason.SERVER_DISCONNECT:
@@ -272,13 +272,13 @@ A "catch-all" event handler is invoked for any events that do not have an
 event handler. You can define a catch-all handler using ``'*'`` as event name::
 
    @sio.on('*')
-   def any_event(event, sid, data):
+   def any_event(event: Event, sid: SocketID, data: Data):
         pass
 
 Asyncio servers can also use a coroutine::
 
    @sio.on('*')
-   async def any_event(event, sid, data):
+   async def any_event(event: Event, sid: SocketID, data: Data):
        pass
 
 A catch-all event handler receives the event name as a first argument. The
@@ -324,7 +324,7 @@ can provide a list of values that are to be passed on to the client with the
 acknowledgement simply by returning them::
 
     @sio.event
-    def my_event(sid, data):
+    def my_event(sid: SocketID, data: Data):
         # handle the message
         return "OK", 123  # <-- client will have these as acknowledgement
 
@@ -374,11 +374,11 @@ rooms as needed and can be moved between rooms when necessary.
 ::
 
     @sio.event
-    def begin_chat(sid):
+    def begin_chat(sid: SocketID):
         sio.enter_room(sid, 'chat_users')
 
     @sio.event
-    def exit_chat(sid):
+    def exit_chat(sid: SocketID):
         sio.leave_room(sid, 'chat_users')
 
 In chat applications it is often desired that an event is broadcasted to all
@@ -390,7 +390,7 @@ during the broadcast.
 ::
 
     @sio.event
-    def my_message(sid, data):
+    def my_message(sid: SocketID, data: Data):
         sio.emit('my reply', data, room='chat_users', skip_sid=sid)
 
 Namespaces
@@ -414,11 +414,11 @@ Decorator-based namespaces are regular event handlers that include the
 ``namespace`` argument in their decorator::
 
     @sio.event(namespace='/chat')
-    def my_custom_event(sid, data):
+    def my_custom_event(sid: SocketID, data: Data):
         pass
 
     @sio.on('my custom event', namespace='/chat')
-    def my_custom_event(sid, data):
+    def my_custom_event(sid: SocketID, data: Data):
         pass
 
 When emitting an event, the ``namespace`` optional argument is used to specify
@@ -439,13 +439,13 @@ belong to a namespace can be created as methods in a subclass of
 :class:`socketio.Namespace`::
 
     class MyCustomNamespace(socketio.Namespace):
-        def on_connect(self, sid, environ):
+        def on_connect(self, sid: SocketID, environ: Environ):
             pass
 
-        def on_disconnect(self, sid, reason):
+        def on_disconnect(self, sid: SocketID, reason: Reason):
             pass
 
-        def on_my_event(self, sid, data):
+        def on_my_event(self, sid: SocketID, data: Data):
             self.emit('my_response', data)
 
     sio.register_namespace(MyCustomNamespace('/test'))
@@ -455,13 +455,13 @@ For asyncio based servers, namespaces must inherit from
 if desired::
 
     class MyCustomNamespace(socketio.AsyncNamespace):
-        def on_connect(self, sid, environ):
+        def on_connect(self, sid: SocketID, environ: Environ):
             pass
 
-        def on_disconnect(self, sid, reason):
+        def on_disconnect(self, sid: SocketID, reason: Reason):
             pass
 
-        async def on_my_event(self, sid, data):
+        async def on_my_event(self, sid: SocketID, data: Data):
             await self.emit('my_response', data)
 
     sio.register_namespace(MyCustomNamespace('/test'))
@@ -496,7 +496,7 @@ explicitly defined event handler. As with catch-all events, ``'*'`` is used in
 place of a namespace::
 
    @sio.on('my_event', namespace='*')
-   def my_event_any_namespace(namespace, sid, data):
+   def my_event_any_namespace(namespace, sid: SocketID, data: Data):
        pass
 
 For these events, the namespace is passed as first argument, followed by the
@@ -511,7 +511,7 @@ A "catch-all" handler for all events on all namespaces can be defined as
 follows::
 
    @sio.on('*', namespace='*')
-   def any_event_any_namespace(event, namespace, sid, data):
+   def any_event_any_namespace(event, namespace, sid: SocketID, data: Data):
        pass
 
 Event handlers with catch-all events and namespaces receive the event name and
@@ -529,50 +529,50 @@ The ``save_session()`` and ``get_session()`` methods are used to store and
 retrieve information in the user session::
 
     @sio.event
-    def connect(sid, environ):
+    def connect(sid: SocketID, environ: Environ):
         username = authenticate_user(environ)
         sio.save_session(sid, {'username': username})
 
     @sio.event
-    def message(sid, data):
+    def message(sid: SocketID, data: Data):
         session = sio.get_session(sid)
         print('message from ', session['username'])
 
 For the ``asyncio`` server, these methods are coroutines::
 
     @sio.event
-    async def connect(sid, environ):
+    async def connect(sid: SocketID, environ: Environ):
         username = authenticate_user(environ)
         await sio.save_session(sid, {'username': username})
 
     @sio.event
-    async def message(sid, data):
+    async def message(sid: SocketID, data: Data):
         session = await sio.get_session(sid)
         print('message from ', session['username'])
 
 The session can also be manipulated with the `session()` context manager::
 
     @sio.event
-    def connect(sid, environ):
+    def connect(sid: SocketID, environ: Environ):
         username = authenticate_user(environ)
         with sio.session(sid) as session:
             session['username'] = username
 
     @sio.event
-    def message(sid, data):
+    def message(sid: SocketID, data: Data):
         with sio.session(sid) as session:
             print('message from ', session['username'])
 
 For the ``asyncio`` server, an asynchronous context manager is used::
 
     @sio.event
-    async def connect(sid, environ):
+    async def connect(sid: SocketID, environ: Environ):
         username = authenticate_user(environ)
         async with sio.session(sid) as session:
             session['username'] = username
 
     @sio.event
-    async def message(sid, data):
+    async def message(sid: SocketID, data: Data):
         async with sio.session(sid) as session:
             print('message from ', session['username'])
 
@@ -619,7 +619,7 @@ is disabled by default. To enable it, call the
 :func:`instrument() <socketio.Server.instrument>` method. For example::
 
     import os
-    import socketio
+    import fastsio as socketio
 
     sio = socketio.Server(cors_allowed_origins=[
         'http://localhost:5000',
@@ -645,7 +645,7 @@ Debugging and Troubleshooting
 To help you debug issues, the server can be configured to output logs to the
 terminal::
 
-    import socketio
+    import fastsio as socketio
 
     # standard Python
     sio = socketio.Server(logger=True, engineio_logger=True)

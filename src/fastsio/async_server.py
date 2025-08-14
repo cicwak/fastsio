@@ -6,7 +6,7 @@ from typing import Any, AsyncContextManager, Callable, Dict, List, Optional, Set
 import engineio
 
 from . import async_manager, base_server, exceptions, packet
-from .types import SocketID, Environ, Auth, Reason, Data
+from .types import SocketID, Environ, Auth, Reason, Data, Event
 
 from pydantic import BaseModel as _PydanticBaseModel
 
@@ -847,6 +847,10 @@ class AsyncServer(base_server.BaseServer):
 
                 if ann is Data:
                     di_kwargs.setdefault(pname, args[-1])
+                    continue
+
+                if ann is Event:
+                    di_kwargs.setdefault(pname, event)
                     continue
 
                 try:

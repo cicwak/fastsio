@@ -4,7 +4,7 @@ API Reference
 .. toctree::
    :maxdepth: 3
 
-.. module:: socketio
+.. module:: fastsio
 
 .. autoclass:: SimpleClient
    :members:
@@ -30,7 +30,7 @@ API Reference
    :members:
    :inherited-members:
 
-.. autoclass:: socketio.exceptions.ConnectionRefusedError
+.. autoclass:: fastsio.exceptions.ConnectionRefusedError
    :members:
 
 .. autoclass:: WSGIApp
@@ -87,5 +87,8 @@ API Reference
    :inherited-members:
 
 .. autoclass:: AsyncAioPikaManager
+
+.. autoclass:: RouterSIO
+   :members:
    :members:
    :inherited-members:

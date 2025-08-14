@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastsio"
-version = "0.0.1"  # будет перезаписываться GitHub Actions по тегу
+version = "0.2.1"  # будет перезаписываться GitHub Actions по тегу
 description = "light and typization Socket.IO server and client for Python"
 license = "MIT"
 readme = "README.md"
@@ -11,26 +11,6 @@ authors = [
   "Konstantin Ponomarev <cicwak@gmail.com>",
 ]
 packages = [{ include = "fastsio", from = "src" }]
-
-#[project.readme]
-#file = "README.md"
-#content-type = "text/markdown"
-#
-#[project.urls]
-#Homepage = "https://github.com/cicwak/fastsio"
-#"Bug Tracker" = "https://github.com/cicwak/fastsio/issues"
-#
-#[project.optional-dependencies]
-#client = [
-#    "requests >= 2.21.0",
-#    "websocket-client >= 0.54.0",
-#]
-#asyncio_client = [
-#    "aiohttp >= 3.4",
-#]
-#docs = [
-#    "sphinx",
-#]
 
 [tool.poetry.dependencies]
 python = ">=3.9"

@@ -247,7 +247,7 @@ For the ``asyncio`` client, event handlers can be regular functions as above,
 or can also be coroutines::
 
     @sio.event
-    async def message(data):
+    async def message(data: Data):
         print('I received a message!')
 
 If the server includes arguments with an event, those are passed to the
