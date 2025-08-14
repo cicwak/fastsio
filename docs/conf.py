@@ -18,14 +18,14 @@
 
 # -- Project information -----------------------------------------------------
 
-project = "python-socketio"
-copyright = "2018, Miguel Grinberg"
-author = "Miguel Grinberg"
+project = "fastsio"
+copyright = "2025, Konstantin Ponomarev"
+author = "Konstantin Ponomarev"
 
 # The short X.Y version
-version = ""
+version = "0.2.0"
 # The full version, including alpha/beta/rc tags
-release = ""
+release = "0.2.0"
 
 
 # -- General configuration ---------------------------------------------------
@@ -83,8 +83,8 @@ html_theme = "alabaster"
 # documentation.
 #
 html_theme_options = {
-    "github_user": "miguelgrinberg",
-    "github_repo": "python-socketio",
+    "github_user": "cicwak",
+    "github_repo": "fastsio",
     "github_banner": True,
     "github_button": True,
     "github_type": "star",
@@ -110,7 +110,7 @@ html_static_path = ["_static"]
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "python-socketiodoc"
+htmlhelp_basename = "fastsio"
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -136,9 +136,9 @@ latex_elements = {
 latex_documents = [
     (
         master_doc,
-        "python-socketio.tex",
-        "python-socketio Documentation",
-        "Miguel Grinberg",
+        "fastsio.tex",
+        "fastsio Documentation",
+        "Konstantin Ponomarev",
         "manual",
     ),
 ]
@@ -149,7 +149,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, "python-socketio", "python-socketio Documentation", [author], 1)
+    (master_doc, "fastsio", "fastsio Documentation", [author], 1)
 ]
 
 
@@ -161,10 +161,10 @@ man_pages = [
 texinfo_documents = [
     (
         master_doc,
-        "python-socketio",
-        "python-socketio Documentation",
+        "fastsio",
+        "fastsio Documentation",
         author,
-        "python-socketio",
+        "fastsio",
         "One line description of project.",
         "Miscellaneous",
     ),
