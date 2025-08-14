@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import engineio
 
 from . import base_namespace, manager, packet
+from .asyncapi import AsyncAPIConfig
 from .router import RouterSIO
 
 default_logger = logging.getLogger("socketio.server")
@@ -23,9 +24,28 @@ class BaseServer:
         async_handlers: bool = True,
         always_connect: bool = False,
         namespaces: Optional[Union[List[str], str]] = None,
+        asyncapi: AsyncAPIConfig | Dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         engineio_options = kwargs
+        # Extract AsyncAPI configuration before passing options to Engine.IO
+        asyncapi_dict: Optional[AsyncAPIConfig | Dict[str, Any]] = asyncapi
+        if isinstance(asyncapi, AsyncAPIConfig):
+            self.asyncapi_config = asyncapi
+        elif isinstance(asyncapi_dict, dict):
+            self.asyncapi_config = AsyncAPIConfig(
+                enabled=bool(asyncapi_dict.get("enabled", False)),
+                url=str(asyncapi_dict.get("url", "/asyncapi.json")),
+                expose_yaml=bool(asyncapi_dict.get("expose_yaml", True)),
+                title=str(asyncapi_dict.get("title", "Socket.IO API")),
+                version=str(asyncapi_dict.get("version", "1.0.0")),
+                description=asyncapi_dict.get("description", None),
+                servers=dict(asyncapi_dict.get("servers", {}) or {}),
+                channel_prefix=str(asyncapi_dict.get("channel_prefix", "")),
+                spec_version=str(asyncapi_dict.get("spec_version", "3.0.0")),
+            )
+        else:
+            self.asyncapi_config = AsyncAPIConfig()
         engineio_logger = engineio_options.pop("engineio_logger", None)
         if engineio_logger is not None:
             engineio_options["logger"] = engineio_logger
@@ -85,6 +105,9 @@ class BaseServer:
         event: str,
         handler: Optional[Callable[..., Any]] = None,
         namespace: Optional[str] = None,
+        *,
+        response_model: Optional[Any] = None,
+        channel: Optional[str] = None,
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register an event handler.
 
@@ -141,6 +164,17 @@ class BaseServer:
         def set_handler(handler: Callable[..., Any]) -> Callable[..., Any]:
             if namespace not in self.handlers:
                 self.handlers[namespace] = {}
+            # Attach metadata for AsyncAPI generation
+            if response_model is not None:
+                try:
+                    setattr(handler, "_fastsio_response_model", response_model)
+                except Exception:
+                    pass
+            if channel is not None:
+                try:
+                    setattr(handler, "_fastsio_channel_override", channel)
+                except Exception:
+                    pass
             self.handlers[namespace][event] = handler
             return handler
 

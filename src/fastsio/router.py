@@ -1,4 +1,5 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing_extensions import deprecated
 
 from . import base_namespace
 
@@ -15,7 +16,7 @@ class RouterSIO:
         router = RouterSIO(namespace="/chat")
 
         @router.on("message")
-        async def handle_message(sid: str, data: Any):
+        async def handle_message(sid: SocketID, data: Data):
             ...
 
         sio.add_router(router)
@@ -35,12 +36,27 @@ class RouterSIO:
         event: str,
         handler: Optional[Callable[..., Any]] = None,
         namespace: Optional[str] = None,
+        *,
+        response_model: Optional[Any] = None,
+        channel: Optional[str] = None,
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         ns = namespace or self.default_namespace
 
         def set_handler(h: Callable[..., Any]) -> Callable[..., Any]:
             if ns not in self.handlers:
                 self.handlers[ns] = {}
+            # Set AsyncAPI-related metadata on function
+            eff_resp_model = response_model
+            if eff_resp_model is not None:
+                try:
+                    setattr(h, "_fastsio_response_model", eff_resp_model)
+                except Exception:
+                    pass
+            if channel is not None:
+                try:
+                    setattr(h, "_fastsio_channel_override", channel)
+                except Exception:
+                    pass
             self.handlers[ns][event] = h
             return h
 
