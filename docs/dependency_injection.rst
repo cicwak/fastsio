@@ -14,6 +14,7 @@ What can be injected
 - Pydantic models: validated from a single-argument payload (see below)
 - ``Reason``: disconnect reason (only in ``disconnect`` handler)
 - ``Data``: raw payload of the event
+- ``Event``: name of handled event
 
 Examples
 --------

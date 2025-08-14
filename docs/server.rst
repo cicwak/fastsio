@@ -254,7 +254,7 @@ The disconnect handler receives the ``sid`` assigned to the client and a
 ``reason``, which provides the cause of the disconnection::
 
     @sio.event
-    def disconnect(sid: SocketID, reason):
+    def disconnect(sid: SocketID, reason: Reason):
         if reason == sio.reason.CLIENT_DISCONNECT:
             print('the client disconnected')
         elif reason == sio.reason.SERVER_DISCONNECT:
