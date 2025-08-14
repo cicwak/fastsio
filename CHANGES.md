@@ -149,7 +149,7 @@
 
 - Connect with an empty auth object instead of `None` [#861](https://github.com/miguelgrinberg/python-socketio/issues/861) ([commit](https://github.com/miguelgrinberg/python-socketio/commit/1fb7a76575426dd58a5e9c0e01646302ccc96188))
 - Fix indentation in the "Rooms" docs example. [#872](https://github.com/miguelgrinberg/python-socketio/issues/872) ([commit](https://github.com/miguelgrinberg/python-socketio/commit/3336181f9ce5fe737d675f8343f18a885c651ebd)) (thanks **Ezio Melotti**!)
-- Remove 3.6 and pypy-3.6 builds, add 3.10 and pypy-3.8 ([commit](https://github.com/miguelgrinberg/python-socketio/commit/ed5679a7cb01963b44a5004e1236b7e8b485aa0b))
+- Remove 3.6 and pypy-3.6 builds, add 3.10 and pypy-3.9 ([commit](https://github.com/miguelgrinberg/python-socketio/commit/ed5679a7cb01963b44a5004e1236b7e8b485aa0b))
 
 **Release 5.5.1** - 2022-01-11
 
