@@ -40,7 +40,7 @@ JavaScript Socket.IO version | Socket.IO protocol revision | Engine.IO protocol 
 Resources
 ---------
 
--  [Documentation](http://python-socketio.readthedocs.io/)
--  [PyPI](https://pypi.python.org/pypi/python-socketio)
--  [Change Log](https://github.com/miguelgrinberg/python-socketio/blob/main/CHANGES.md)
+-  [Documentation](http://fastsio.readthedocs.io/)
+-  [PyPI](https://pypi.python.org/pypi/fastsio)
+-  [Change Log](https://github.com/cicwak/fastsio/blob/main/CHANGES.md)
 -  Questions? See the [questions](https://stackoverflow.com/questions/tagged/python-socketio) others have asked on Stack Overflow, or [ask](https://stackoverflow.com/questions/ask?tags=python+python-socketio) your own question.
