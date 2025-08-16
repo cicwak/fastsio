@@ -106,8 +106,9 @@ class BaseServer:
         handler: Optional[Callable[..., Any]] = None,
         namespace: Optional[str] = None,
         *,
-        response_model: Optional[Any] = None,
+        response_model: Optional[Union[Any, Dict[str, Any]]] = None,
         channel: Optional[str] = None,
+        # asyncapi_from_ast: bool = False,
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register an event handler.
 
@@ -164,9 +165,26 @@ class BaseServer:
         def set_handler(handler: Callable[..., Any]) -> Callable[..., Any]:
             if namespace not in self.handlers:
                 self.handlers[namespace] = {}
-            # Attach metadata for AsyncAPI generation
+            # Attach metadata for AsyncAPI generation and response validation
             if response_model is not None:
                 try:
+                    # Validate response_model structure
+                    if isinstance(response_model, dict):
+                        # Validate that all values are Pydantic models or valid types
+                        for event_name, model in response_model.items():
+                            if not isinstance(event_name, str):
+                                raise ValueError(f"response_model keys must be strings, got {type(event_name)}")
+                            # Check if it's a Pydantic model (basic check)
+                            if hasattr(model, '__bases__'):
+                                try:
+                                    # Import Pydantic BaseModel locally to avoid import issues
+                                    from pydantic import BaseModel as _PydanticBaseModel
+                                    if not (isinstance(model, type) and issubclass(model, _PydanticBaseModel)):
+                                        raise ValueError(f"response_model['{event_name}'] must be a Pydantic BaseModel, got {type(model)}")
+                                except ImportError:
+                                    # If Pydantic is not available, skip validation
+                                    pass
+                    
                     setattr(handler, "_fastsio_response_model", response_model)
                 except Exception:
                     pass
@@ -328,6 +346,94 @@ class BaseServer:
             handler = self.namespace_handlers["*"]
             args = (namespace, *args)
         return handler, args
+
+    def _validate_response(self, handler: Callable[..., Any], response: Any) -> Any:
+        """Validate response data against response_model if defined."""
+        response_model = getattr(handler, "_fastsio_response_model", None)
+        if response_model is None:
+            return response
+        
+        # If response_model is a dictionary (multiple response models)
+        if isinstance(response_model, dict):
+            # Response should be a tuple of (event_name, data) or (event_name, data, *extra)
+            if not isinstance(response, tuple) or len(response) < 2:
+                raise ValueError(
+                    "When using response_model dict, handler must return tuple of (event_name, data) or (event_name, data, *extra)"
+                )
+            
+            event_name, data = response[0], response[1]
+            extra_args = response[2:] if len(response) > 2 else ()
+            
+            if not isinstance(event_name, str):
+                raise ValueError(f"Event name must be a string, got {type(event_name)}")
+            
+            if event_name not in response_model:
+                raise ValueError(f"Event '{event_name}' not found in response_model. Available events: {list(response_model.keys())}")
+            
+            model = response_model[event_name]
+            
+            # Validate data against the model
+            try:
+                # Import Pydantic BaseModel locally to avoid import issues
+                from pydantic import BaseModel as _PydanticBaseModel
+                
+                if isinstance(model, type) and issubclass(model, _PydanticBaseModel):
+                    # Validate using Pydantic
+                    if hasattr(model, "model_validate"):
+                        # Pydantic v2
+                        if isinstance(data, model):
+                            validated_data = data
+                        else:
+                            validated_data = model.model_validate(data)
+                    else:
+                        # Pydantic v1 fallback
+                        if isinstance(data, model):
+                            validated_data = data
+                        else:
+                            validated_data = model.parse_obj(data)  # type: ignore[attr-defined]
+                    
+                    # Return the tuple with validated data
+                    return (event_name, validated_data) + extra_args
+                else:
+                    # Not a Pydantic model, return as is
+                    return response
+                    
+            except ImportError:
+                # Pydantic not available, skip validation
+                return response
+            except Exception as exc:
+                raise ValueError(f"Failed to validate response data for event '{event_name}': {exc}") from exc
+        
+        else:
+            # Single response model (existing behavior)
+            try:
+                from pydantic import BaseModel as _PydanticBaseModel
+                
+                if isinstance(response_model, type) and issubclass(response_model, _PydanticBaseModel):
+                    # Validate using Pydantic
+                    if hasattr(response_model, "model_validate"):
+                        # Pydantic v2
+                        if isinstance(response, response_model):
+                            return response
+                        else:
+                            return response_model.model_validate(response)
+                    else:
+                        # Pydantic v1 fallback
+                        if isinstance(response, response_model):
+                            return response
+                        else:
+                            return response_model.parse_obj(response)  # type: ignore[attr-defined]
+                else:
+                    # Not a Pydantic model, return as is
+                    return response
+                    
+            except ImportError:
+                # Pydantic not available, skip validation
+                return response
+            except Exception as exc:
+                raise ValueError(f"Failed to validate response data: {exc}") from exc
+        
+        return response
 
     def _handle_eio_connect(self) -> None:  # pragma: no cover
         raise NotImplementedError

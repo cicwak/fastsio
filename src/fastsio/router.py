@@ -1,5 +1,4 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple
-from typing_extensions import deprecated
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from . import base_namespace
 
@@ -37,18 +36,36 @@ class RouterSIO:
         handler: Optional[Callable[..., Any]] = None,
         namespace: Optional[str] = None,
         *,
-        response_model: Optional[Any] = None,
+        response_model: Optional[Union[Any, Dict[str, Any]]] = None,
         channel: Optional[str] = None,
+        # asyncapi_from_ast: bool = False,
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         ns = namespace or self.default_namespace
 
         def set_handler(h: Callable[..., Any]) -> Callable[..., Any]:
             if ns not in self.handlers:
                 self.handlers[ns] = {}
-            # Set AsyncAPI-related metadata on function
+            # Set AsyncAPI-related metadata and response validation on function
             eff_resp_model = response_model
             if eff_resp_model is not None:
                 try:
+                    # Validate response_model structure
+                    if isinstance(eff_resp_model, dict):
+                        # Validate that all values are Pydantic models or valid types
+                        for event_name, model in eff_resp_model.items():
+                            if not isinstance(event_name, str):
+                                raise ValueError(f"response_model keys must be strings, got {type(event_name)}")
+                            # Check if it's a Pydantic model (basic check)
+                            if hasattr(model, '__bases__'):
+                                try:
+                                    # Import Pydantic BaseModel locally to avoid import issues
+                                    from pydantic import BaseModel as _PydanticBaseModel
+                                    if not (isinstance(model, type) and issubclass(model, _PydanticBaseModel)):
+                                        raise ValueError(f"response_model['{event_name}'] must be a Pydantic BaseModel, got {type(model)}")
+                                except ImportError:
+                                    # If Pydantic is not available, skip validation
+                                    pass
+                    
                     setattr(h, "_fastsio_response_model", eff_resp_model)
                 except Exception:
                     pass

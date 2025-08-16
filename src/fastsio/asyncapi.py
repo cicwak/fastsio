@@ -44,47 +44,98 @@ class AsyncAPIGenerator:
             if event in reserved:
                 continue
 
-            address = self._build_channel_name(namespace, event, handler)
-            channel_key = self._sanitize_key(address)
-            # Ensure channel exists with required address (v3)
-            ch_obj = channels.setdefault(channel_key, {"address": address})
-            # Prepare channel-level messages map
-            messages_map: Dict[str, Any] = ch_obj.setdefault("messages", {})
+            # Check if handler has response_model dict
+            response_model = getattr(handler, "_fastsio_response_model", None)
+            
+            if isinstance(response_model, dict):
+                # For response_model dict, create separate channels for each event
+                for response_event_name, model in response_model.items():
+                    response_address = self._build_channel_name(namespace, response_event_name, handler)
+                    response_channel_key = self._sanitize_key(response_address)
+                    response_ch_obj = channels.setdefault(response_channel_key, {"address": response_address})
+                    response_messages_map: Dict[str, Any] = response_ch_obj.setdefault("messages", {})
+                    
+                    # Create response schema for this specific event
+                    model_schema = self._to_schema(model)
+                    if model_schema:
+                        resp_msg_key = self._sanitize_key(f"{response_event_name}Response")
+                        response_messages_map[resp_msg_key] = {
+                            "name": f"{response_event_name}:response",
+                            "payload": model_schema,
+                        }
+                        op_id = f"{response_channel_key}__send"
+                        operations[op_id] = {
+                            "action": "send",
+                            "channel": {"$ref": f"#/channels/{self._escape_ref(response_channel_key)}"},
+                            "messages": [
+                                {"$ref": f"#/channels/{self._escape_ref(response_channel_key)}/messages/{self._escape_ref(resp_msg_key)}"}
+                            ],
+                        }
+                
+                # Still create the receive channel for the original handler event
+                address = self._build_channel_name(namespace, event, handler)
+                channel_key = self._sanitize_key(address)
+                ch_obj = channels.setdefault(channel_key, {"address": address})
+                messages_map: Dict[str, Any] = ch_obj.setdefault("messages", {})
+                
+                request_schema = self._infer_request_schema(handler)
+                if request_schema is not None:
+                    req_msg_key = self._sanitize_key(f"{event}Request")
+                    messages_map[req_msg_key] = {
+                        "name": f"{event}:request",
+                        "payload": request_schema,
+                    }
+                    op_id = f"{channel_key}__receive"
+                    operations[op_id] = {
+                        "action": "receive",
+                        "channel": {"$ref": f"#/channels/{self._escape_ref(channel_key)}"},
+                        "messages": [
+                            {"$ref": f"#/channels/{self._escape_ref(channel_key)}/messages/{self._escape_ref(req_msg_key)}"}
+                        ],
+                    }
+            else:
+                # Original behavior for single response_model or no response_model
+                address = self._build_channel_name(namespace, event, handler)
+                channel_key = self._sanitize_key(address)
+                # Ensure channel exists with required address (v3)
+                ch_obj = channels.setdefault(channel_key, {"address": address})
+                # Prepare channel-level messages map
+                messages_map: Dict[str, Any] = ch_obj.setdefault("messages", {})
 
-            request_schema = self._infer_request_schema(handler)
-            response_schema = self._infer_response_schema(handler)
+                request_schema = self._infer_request_schema(handler)
+                response_schema = self._infer_response_schema(handler)
 
-            # In AsyncAPI v3: operations have action send/receive
-            # - Server application receives messages from clients (client->server): action = "receive"
-            # - Server application sends messages to clients (server->client): action = "send"
-            if request_schema is not None:
-                req_msg_key = self._sanitize_key(f"{event}Request")
-                messages_map[req_msg_key] = {
-                    "name": f"{event}:request",
-                    "payload": request_schema,
-                }
-                op_id = f"{channel_key}__receive"
-                operations[op_id] = {
-                    "action": "receive",
-                    "channel": {"$ref": f"#/channels/{self._escape_ref(channel_key)}"},
-                    "messages": [
-                        {"$ref": f"#/channels/{self._escape_ref(channel_key)}/messages/{self._escape_ref(req_msg_key)}"}
-                    ],
-                }
-            if response_schema is not None:
-                resp_msg_key = self._sanitize_key(f"{event}Response")
-                messages_map[resp_msg_key] = {
-                    "name": f"{event}:response",
-                    "payload": response_schema,
-                }
-                op_id = f"{channel_key}__send"
-                operations[op_id] = {
-                    "action": "send",
-                    "channel": {"$ref": f"#/channels/{self._escape_ref(channel_key)}"},
-                    "messages": [
-                        {"$ref": f"#/channels/{self._escape_ref(channel_key)}/messages/{self._escape_ref(resp_msg_key)}"}
-                    ],
-                }
+                # In AsyncAPI v3: operations have action send/receive
+                # - Server application receives messages from clients (client->server): action = "receive"
+                # - Server application sends messages to clients (server->client): action = "send"
+                if request_schema is not None:
+                    req_msg_key = self._sanitize_key(f"{event}Request")
+                    messages_map[req_msg_key] = {
+                        "name": f"{event}:request",
+                        "payload": request_schema,
+                    }
+                    op_id = f"{channel_key}__receive"
+                    operations[op_id] = {
+                        "action": "receive",
+                        "channel": {"$ref": f"#/channels/{self._escape_ref(channel_key)}"},
+                        "messages": [
+                            {"$ref": f"#/channels/{self._escape_ref(channel_key)}/messages/{self._escape_ref(req_msg_key)}"}
+                        ],
+                    }
+                if response_schema is not None:
+                    resp_msg_key = self._sanitize_key(f"{event}Response")
+                    messages_map[resp_msg_key] = {
+                        "name": f"{event}:response",
+                        "payload": response_schema,
+                    }
+                    op_id = f"{channel_key}__send"
+                    operations[op_id] = {
+                        "action": "send",
+                        "channel": {"$ref": f"#/channels/{self._escape_ref(channel_key)}"},
+                        "messages": [
+                            {"$ref": f"#/channels/{self._escape_ref(channel_key)}/messages/{self._escape_ref(resp_msg_key)}"}
+                        ],
+                    }
 
         doc: Dict[str, Any] = {
             "asyncapi": "3.0.0",
@@ -154,7 +205,12 @@ class AsyncAPIGenerator:
         # Priority: explicit attribute set via decorator > return annotation
         resp_model = getattr(handler, "_fastsio_response_model", None)
         if resp_model is not None:
-            return self._to_schema(resp_model)
+            # If response_model is a dictionary, return None since we handle it separately
+            if isinstance(resp_model, dict):
+                return None
+            else:
+                # Single response model (existing behavior)
+                return self._to_schema(resp_model)
 
         try:
             sig = inspect.signature(handler)  # type: ignore[arg-type]

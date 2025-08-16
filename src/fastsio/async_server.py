@@ -894,6 +894,9 @@ class AsyncServer(base_server.BaseServer):
                         ret = handler(**di_kwargs)
                     else:  # pragma: no cover
                         raise
+            
+            # Validate response if response_model is defined
+            ret = self._validate_response(handler, ret)
             return ret
         # or else, forward the event to a namespace handler if one exists
         handler, args = self._get_namespace_handler(namespace, args)
