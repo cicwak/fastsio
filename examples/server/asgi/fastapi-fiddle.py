@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-import socketio
+import fastsio
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")

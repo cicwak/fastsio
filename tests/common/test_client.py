@@ -20,7 +20,7 @@ class TestClient:
         c = client.Client()
         assert not c.is_asyncio_based()
 
-    @mock.patch("socketio.client.Client._engineio_client_class")
+    @mock.patch("fastsio.client.Client._engineio_client_class")
     def test_create(self, engineio_client_class):
         c = client.Client(
             reconnection=False,
@@ -87,7 +87,7 @@ class TestClient:
         c = client.Client(logger=my_logger)
         assert c.logger == my_logger
 
-    @mock.patch("socketio.client.Client._engineio_client_class")
+    @mock.patch("fastsio.client.Client._engineio_client_class")
     def test_engineio_logger(self, engineio_client_class):
         client.Client(engineio_logger="foo")
         engineio_client_class().assert_called_once_with(
@@ -1033,7 +1033,7 @@ class TestClient:
         c._trigger_event("foo", "/bar", 1, "2")
         assert result == []
 
-    @mock.patch("socketio.client.random.random", side_effect=[1, 0, 0.5])
+    @mock.patch("fastsio.client.random.random", side_effect=[1, 0, 0.5])
     def test_handle_reconnect(self, random):
         c = client.Client()
         c._reconnect_task = "foo"

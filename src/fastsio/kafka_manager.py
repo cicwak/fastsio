@@ -21,7 +21,7 @@ class KafkaManager(PubSubManager):  # pragma: no cover
     follows::
 
         url = "kafka://hostname:port"
-        server = socketio.Server(client_manager=socketio.KafkaManager(url))
+        server = fastsio.Server(client_manager=fastsio.KafkaManager(url))
 
     :param url: The connection URL for the Kafka server. For a default Kafka
                 store running on the same host, use ``kafka://``. For a highly

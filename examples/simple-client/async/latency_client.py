@@ -1,7 +1,7 @@
 import asyncio
 import time
 
-import socketio
+import fastsio
 
 
 async def main():

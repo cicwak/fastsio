@@ -6,7 +6,7 @@ import engineio
 
 from . import base_client, exceptions, packet
 
-default_logger = logging.getLogger("socketio.client")
+default_logger = logging.getLogger("fastsio.client")
 
 
 class AsyncClient(base_client.BaseClient):
@@ -123,7 +123,7 @@ class AsyncClient(base_client.BaseClient):
 
         Example usage::
 
-            sio = socketio.AsyncClient()
+            sio = fastsio.AsyncClient()
             await sio.connect("http://localhost:5000")
         """
         if self.connected:

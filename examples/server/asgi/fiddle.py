@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import uvicorn
 
-import socketio
+import fastsio
 
 sio = socketio.AsyncServer(async_mode="asgi")
 app = socketio.ASGIApp(

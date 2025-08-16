@@ -1,10 +1,10 @@
 import time
 
-import socketio
+import fastsio
 
 
 def test():
-    s = socketio.Server(async_handlers=False)
+    s = fastsio.Server(async_handlers=False)
     start = time.time()
     count = 0
     s._handle_eio_connect("123", "environ")

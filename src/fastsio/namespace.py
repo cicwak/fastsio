@@ -46,7 +46,7 @@ class Namespace(base_namespace.BaseServerNamespace):
     ):
         """Emit a custom event to one or more connected clients.
 
-        The only difference with the :func:`socketio.Server.emit` method is
+        The only difference with the :func:`fastsio.Server.emit` method is
         that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """
@@ -73,7 +73,7 @@ class Namespace(base_namespace.BaseServerNamespace):
     ):
         """Send a message to one or more connected clients.
 
-        The only difference with the :func:`socketio.Server.send` method is
+        The only difference with the :func:`fastsio.Server.send` method is
         that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """
@@ -99,7 +99,7 @@ class Namespace(base_namespace.BaseServerNamespace):
     ):
         """Emit a custom event to a client and wait for the response.
 
-        The only difference with the :func:`socketio.Server.call` method is
+        The only difference with the :func:`fastsio.Server.call` method is
         that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """
@@ -116,7 +116,7 @@ class Namespace(base_namespace.BaseServerNamespace):
     def enter_room(self, sid, room, namespace=None):
         """Enter a room.
 
-        The only difference with the :func:`socketio.Server.enter_room` method
+        The only difference with the :func:`fastsio.Server.enter_room` method
         is that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """
@@ -125,7 +125,7 @@ class Namespace(base_namespace.BaseServerNamespace):
     def leave_room(self, sid, room, namespace=None):
         """Leave a room.
 
-        The only difference with the :func:`socketio.Server.leave_room` method
+        The only difference with the :func:`fastsio.Server.leave_room` method
         is that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """
@@ -134,7 +134,7 @@ class Namespace(base_namespace.BaseServerNamespace):
     def close_room(self, room, namespace=None):
         """Close a room.
 
-        The only difference with the :func:`socketio.Server.close_room` method
+        The only difference with the :func:`fastsio.Server.close_room` method
         is that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """
@@ -143,7 +143,7 @@ class Namespace(base_namespace.BaseServerNamespace):
     def get_session(self, sid, namespace=None):
         """Return the user session for a client.
 
-        The only difference with the :func:`socketio.Server.get_session`
+        The only difference with the :func:`fastsio.Server.get_session`
         method is that when the ``namespace`` argument is not given the
         namespace associated with the class is used.
         """
@@ -152,7 +152,7 @@ class Namespace(base_namespace.BaseServerNamespace):
     def save_session(self, sid, session, namespace=None):
         """Store the user session for a client.
 
-        The only difference with the :func:`socketio.Server.save_session`
+        The only difference with the :func:`fastsio.Server.save_session`
         method is that when the ``namespace`` argument is not given the
         namespace associated with the class is used.
         """
@@ -163,7 +163,7 @@ class Namespace(base_namespace.BaseServerNamespace):
     def session(self, sid, namespace=None):
         """Return the user session for a client with context manager syntax.
 
-        The only difference with the :func:`socketio.Server.session` method is
+        The only difference with the :func:`fastsio.Server.session` method is
         that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """
@@ -172,7 +172,7 @@ class Namespace(base_namespace.BaseServerNamespace):
     def disconnect(self, sid, namespace=None):
         """Disconnect a client.
 
-        The only difference with the :func:`socketio.Server.disconnect` method
+        The only difference with the :func:`fastsio.Server.disconnect` method
         is that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """
@@ -214,7 +214,7 @@ class ClientNamespace(base_namespace.BaseClientNamespace):
     def emit(self, event, data=None, namespace=None, callback=None):
         """Emit a custom event to the server.
 
-        The only difference with the :func:`socketio.Client.emit` method is
+        The only difference with the :func:`fastsio.Client.emit` method is
         that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """
@@ -225,7 +225,7 @@ class ClientNamespace(base_namespace.BaseClientNamespace):
     def send(self, data, room=None, namespace=None, callback=None):
         """Send a message to the server.
 
-        The only difference with the :func:`socketio.Client.send` method is
+        The only difference with the :func:`fastsio.Client.send` method is
         that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """
@@ -236,7 +236,7 @@ class ClientNamespace(base_namespace.BaseClientNamespace):
     def call(self, event, data=None, namespace=None, timeout=None):
         """Emit a custom event to the server and wait for the response.
 
-        The only difference with the :func:`socketio.Client.call` method is
+        The only difference with the :func:`fastsio.Client.call` method is
         that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """
@@ -247,7 +247,7 @@ class ClientNamespace(base_namespace.BaseClientNamespace):
     def disconnect(self):
         """Disconnect from the server.
 
-        The only difference with the :func:`socketio.Client.disconnect` method
+        The only difference with the :func:`fastsio.Client.disconnect` method
         is that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """

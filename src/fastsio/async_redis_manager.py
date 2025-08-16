@@ -26,7 +26,7 @@ class AsyncRedisManager(AsyncPubSubManager):  # pragma: no cover
     follows::
 
         url = "redis://hostname:port/0"
-        server = socketio.AsyncServer(client_manager=socketio.AsyncRedisManager(url))
+        server = fastsio.AsyncServer(client_manager=fastsio.AsyncRedisManager(url))
 
     :param url: The connection URL for the Redis server. For a default Redis
                 store running on the same host, use ``redis://``.  To use a

@@ -1,9 +1,9 @@
 import time
 
-import socketio
+import fastsio
 
 
-class Server(socketio.Server):
+class Server(fastsio.Server):
     def _send_packet(self, eio_sid, pkt):
         pass
 

@@ -5,7 +5,7 @@ from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, make_server
 
 import requests
 
-import socketio
+import fastsio
 
 
 class SocketIOWebServer:
@@ -27,7 +27,7 @@ class SocketIOWebServer:
             return [b"OK"]
 
         self.sio = sio
-        self.app = socketio.WSGIApp(sio, http_app)
+        self.app = fastsio.WSGIApp(sio, http_app)
         self.httpd = None
         self.thread = None
 

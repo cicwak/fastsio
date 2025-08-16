@@ -9,7 +9,7 @@ try:
     from engineio.async_socket import AsyncSocket as EngineIOSocket
 except ImportError:
     from engineio.asyncio_socket import AsyncSocket as EngineIOSocket
-import socketio
+import fastsio
 from fastsio.exceptions import ConnectionError
 from tests.asyncio_web_server import SocketIOWebServer
 
@@ -24,7 +24,7 @@ def with_instrumented_server(auth=False, **ikwargs):
     def decorator(f):
         @wraps(f)
         def wrapped(self, *args, **kwargs):
-            sio = socketio.AsyncServer(async_mode="asgi")
+            sio = fastsio.AsyncServer(async_mode="asgi")
 
             @sio.event
             async def enter_room(sid, data):

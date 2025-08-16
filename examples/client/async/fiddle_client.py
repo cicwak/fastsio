@@ -1,6 +1,6 @@
 import asyncio
 
-import socketio
+import fastsio
 
 sio = socketio.AsyncClient()
 

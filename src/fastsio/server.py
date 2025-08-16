@@ -4,7 +4,7 @@ import engineio
 
 from . import base_server, exceptions, packet
 
-default_logger = logging.getLogger("socketio.server")
+default_logger = logging.getLogger("fastsio.server")
 
 
 class Server(base_server.BaseServer):

@@ -10,7 +10,7 @@ admin_login = {
 
 import uvicorn
 
-import socketio
+import fastsio
 
 sio = socketio.AsyncServer(
     async_mode="asgi",

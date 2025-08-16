@@ -31,7 +31,7 @@ class ASGIApp(_BaseASGIApp):  # pragma: no cover
     HTTP traffic to another ASGI application.
 
     :param socketio_server: The Socket.IO server. Must be an instance of the
-                            ``socketio.AsyncServer`` class.
+                            ``fastsio.AsyncServer`` class.
     :param static_files: A dictionary with static file mapping rules. See the
                          documentation for details on this argument.
     :param other_asgi_app: A separate ASGI app that receives all other traffic.
@@ -50,11 +50,11 @@ class ASGIApp(_BaseASGIApp):  # pragma: no cover
 
     Example usage::
 
-        import socketio
+        import fastsio
         import uvicorn
 
-        sio = socketio.AsyncServer()
-        app = socketio.ASGIApp(
+        sio = fastsio.AsyncServer()
+        app = fastsio.ASGIApp(
             sio,
             static_files={
                 "/": "index.html",

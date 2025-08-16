@@ -1,6 +1,6 @@
 import time
 
-import socketio
+import fastsio
 
 sio = socketio.Client(logger=True, engineio_logger=True)
 start_timer = None

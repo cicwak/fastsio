@@ -20,7 +20,7 @@ class BaseServerNamespace(BaseNamespace):
     def rooms(self, sid: str, namespace: Optional[str] = None):
         """Return the rooms a client is in.
 
-        The only difference with the :func:`socketio.Server.rooms` method is
+        The only difference with the :func:`fastsio.Server.rooms` method is
         that when the ``namespace`` argument is not given the namespace
         associated with the class is used.
         """

@@ -8,7 +8,7 @@ from fastsio import exceptions, msgpack_packet, namespace, packet, server
 
 
 @mock.patch(
-    "socketio.server.engineio.Server",
+    "fastsio.server.engineio.Server",
     **{"return_value.generate_id.side_effect": [str(i) for i in range(1, 10)]},
 )
 class TestServer:

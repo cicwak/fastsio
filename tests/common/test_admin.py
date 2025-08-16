@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 from engineio.socket import Socket as EngineIOSocket
 
-import socketio
+import fastsio
 from fastsio.exceptions import ConnectionError
 from tests.web_server import SocketIOWebServer
 
@@ -21,7 +21,7 @@ def with_instrumented_server(auth=False, **ikwargs):
     def decorator(f):
         @wraps(f)
         def wrapped(self, *args, **kwargs):
-            sio = socketio.Server(async_mode="threading")
+            sio = fastsio.Server(async_mode="threading")
 
             @sio.event
             def enter_room(sid, data):
@@ -44,7 +44,7 @@ def with_instrumented_server(auth=False, **ikwargs):
 
             # import logging
             # logging.getLogger('engineio.client').setLevel(logging.DEBUG)
-            # logging.getLogger('socketio.client').setLevel(logging.DEBUG)
+            # logging.getLogger('fastsio.client').setLevel(logging.DEBUG)
 
             original_schedule_ping = EngineIOSocket.schedule_ping
             EngineIOSocket.schedule_ping = mock.MagicMock()
@@ -61,7 +61,7 @@ def with_instrumented_server(auth=False, **ikwargs):
 
             # import logging
             # logging.getLogger('engineio.client').setLevel(logging.NOTSET)
-            # logging.getLogger('socketio.client').setLevel(logging.NOTSET)
+            # logging.getLogger('fastsio.client').setLevel(logging.NOTSET)
 
             return ret
 
@@ -96,73 +96,73 @@ class TestAdmin:
         return events
 
     def test_missing_auth(self):
-        sio = socketio.Server(async_mode="threading")
+        sio = fastsio.Server(async_mode="threading")
         with pytest.raises(ValueError):
             sio.instrument()
 
     @with_instrumented_server(auth=False)
     def test_admin_connect_with_no_auth(self):
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             admin_client.connect("http://localhost:8900", namespace="/admin")
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             admin_client.connect(
                 "http://localhost:8900", namespace="/admin", auth={"foo": "bar"}
             )
 
     @with_instrumented_server(auth={"foo": "bar"})
     def test_admin_connect_with_dict_auth(self):
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             admin_client.connect(
                 "http://localhost:8900", namespace="/admin", auth={"foo": "bar"}
             )
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             with pytest.raises(ConnectionError):
                 admin_client.connect(
                     "http://localhost:8900", namespace="/admin", auth={"foo": "baz"}
                 )
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             with pytest.raises(ConnectionError):
                 admin_client.connect("http://localhost:8900", namespace="/admin")
 
     @with_instrumented_server(auth=[{"foo": "bar"}, {"u": "admin", "p": "secret"}])
     def test_admin_connect_with_list_auth(self):
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             admin_client.connect(
                 "http://localhost:8900", namespace="/admin", auth={"foo": "bar"}
             )
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             admin_client.connect(
                 "http://localhost:8900",
                 namespace="/admin",
                 auth={"u": "admin", "p": "secret"},
             )
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             with pytest.raises(ConnectionError):
                 admin_client.connect(
                     "http://localhost:8900", namespace="/admin", auth={"foo": "baz"}
                 )
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             with pytest.raises(ConnectionError):
                 admin_client.connect("http://localhost:8900", namespace="/admin")
 
     @with_instrumented_server(auth=_custom_auth)
     def test_admin_connect_with_function_auth(self):
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             admin_client.connect(
                 "http://localhost:8900", namespace="/admin", auth={"foo": "bar"}
             )
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             with pytest.raises(ConnectionError):
                 admin_client.connect(
                     "http://localhost:8900", namespace="/admin", auth={"foo": "baz"}
                 )
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             with pytest.raises(ConnectionError):
                 admin_client.connect("http://localhost:8900", namespace="/admin")
 
     @with_instrumented_server()
     def test_admin_connect_only_admin(self):
-        with socketio.SimpleClient() as admin_client:
+        with fastsio.SimpleClient() as admin_client:
             admin_client.connect("http://localhost:8900", namespace="/admin")
             sid = admin_client.sid
             events = self._expect(

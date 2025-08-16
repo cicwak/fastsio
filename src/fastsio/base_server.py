@@ -8,7 +8,7 @@ from . import base_namespace, manager, packet
 from .asyncapi import AsyncAPIConfig
 from .router import RouterSIO
 
-default_logger = logging.getLogger("socketio.server")
+default_logger = logging.getLogger("fastsio.server")
 
 
 class BaseServer:
