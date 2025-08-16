@@ -45,7 +45,7 @@ pip install fastsio[asyncio_client]
 
 ```python
 import fastsio
-from fastsio import ASGIApp
+from fastsio import ASGIApp, SocketID, Environ, Auth, Data
 
 # Create server
 sio = fastsio.AsyncServer(
@@ -54,7 +54,11 @@ sio = fastsio.AsyncServer(
 )
 
 @sio.event
-async def connect(sid, environ, auth):
+async def connect(
+    sid: SocketID, 
+        environ: Environ, 
+        auth: Auth,
+):
     print(f"Client {sid} connected")
     return True
 
@@ -63,7 +67,7 @@ async def disconnect(sid):
     print(f"Client {sid} disconnected")
 
 @sio.on("message")
-async def handle_message(sid, data):
+async def handle_message(sid: SocketID, data: Data):
     await sio.emit("response", f"Received: {data}", to=sid)
 
 # ASGI application
