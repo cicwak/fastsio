@@ -1,7 +1,7 @@
 import asyncio
 import time
 
-import socketio
+import fastsio
 
 loop = asyncio.get_event_loop()
 sio = socketio.AsyncClient()

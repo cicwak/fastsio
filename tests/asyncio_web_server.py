@@ -4,7 +4,7 @@ import time
 import requests
 import uvicorn
 
-import socketio
+import fastsio
 
 
 class SocketIOWebServer:
@@ -31,7 +31,7 @@ class SocketIOWebServer:
             await send({"type": "http.response.body", "body": b"OK"})
 
         self.sio = sio
-        self.app = socketio.ASGIApp(sio, http_app, on_shutdown=on_shutdown)
+        self.app = fastsio.ASGIApp(sio, http_app, on_shutdown=on_shutdown)
         self.httpd = None
         self.thread = None
 

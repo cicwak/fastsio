@@ -1,6 +1,6 @@
 from aiohttp import web
 
-import socketio
+import fastsio
 
 sio = socketio.AsyncServer(async_mode="aiohttp")
 app = web.Application()

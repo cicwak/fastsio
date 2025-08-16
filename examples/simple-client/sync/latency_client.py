@@ -1,6 +1,6 @@
 import time
 
-import socketio
+import fastsio
 
 
 def main():

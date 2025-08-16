@@ -66,9 +66,9 @@ The example that follows shows a simple Python client:
 
 .. code:: python
 
-    import socketio
+    import fastsio
 
-    sio = socketio.Client()
+    sio = fastsio.Client()
 
     @sio.event
     def connect():
@@ -91,9 +91,9 @@ Below is a similar client, coded for ``asyncio`` (Python 3.5+ only):
 .. code:: python
 
     import asyncio
-    import socketio
+    import fastsio
 
-    sio = socketio.AsyncClient()
+    sio = fastsio.AsyncClient()
 
     @sio.event
     async def connect():
@@ -137,10 +137,10 @@ asynchronous server:
 .. code:: python
 
     import eventlet
-    import socketio
+    import fastsio
 
-    sio = socketio.Server()
-    app = socketio.WSGIApp(sio, static_files={
+    sio = fastsio.Server()
+    app = fastsio.WSGIApp(sio, static_files={
         '/': {'content_type': 'text/html', 'filename': 'index.html'}
     })
 
@@ -165,9 +165,9 @@ Uvicorn web server:
 .. code:: python
 
     from aiohttp import web
-    import socketio
+    import fastsio
 
-    sio = socketio.AsyncServer()
+    sio = fastsio.AsyncServer()
     app = web.Application()
     sio.attach(app)
 

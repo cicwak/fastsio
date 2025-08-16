@@ -38,10 +38,10 @@ Creating a Client Instance
 The easiest way to create a Socket.IO client is to use the context manager
 interface::
 
-    import socketio
+    import fastsio
 
     # standard Python
-    with socketio.SimpleClient() as sio:
+    with fastsio.SimpleClient() as sio:
         # ... connect to a server and use the client
         # ... no need to manually disconnect!
 
@@ -56,7 +56,7 @@ disconnected before exiting the ``with`` or ``async with`` block.
 
 If preferred, a client can be manually instantiated::
 
-    import socketio
+    import fastsio
 
     # standard Python
     sio = socketio.SimpleClient()
@@ -188,7 +188,7 @@ Debugging and Troubleshooting
 To help you debug issues, the client can be configured to output logs to the
 terminal::
 
-    import socketio
+    import fastsio
 
     # standard Python
     sio = socketio.Client(logger=True, engineio_logger=True)
@@ -214,7 +214,7 @@ Creating a Client Instance
 To instantiate an Socket.IO client, simply create an instance of the
 appropriate client class::
 
-    import socketio
+    import fastsio
 
     # standard Python
     sio = socketio.Client()
@@ -639,7 +639,7 @@ Debugging and Troubleshooting
 To help you debug issues, the client can be configured to output logs to the
 terminal::
 
-    import socketio
+    import fastsio
 
     # standard Python
     sio = socketio.Client(logger=True, engineio_logger=True)

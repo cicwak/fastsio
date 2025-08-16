@@ -18,6 +18,7 @@ from .server import Server
 from .simple_client import SimpleClient
 from .tornado import get_tornado_handler
 from .router import RouterSIO
+from .asyncapi import AsyncAPIConfig
 from .types import SocketID, Environ, Auth, Reason, Data, Event
 from .zmq_manager import ZmqManager
 
@@ -46,6 +47,7 @@ __all__ = [
     "ZmqManager",
     "get_tornado_handler",
     "RouterSIO",
+    "AsyncAPIConfig",
     "SocketID",
     "Environ",
     "Auth",

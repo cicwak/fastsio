@@ -9,7 +9,7 @@ from fastsio import async_namespace, async_server, exceptions, namespace, packet
 
 
 @mock.patch(
-    "socketio.server.engineio.AsyncServer",
+    "fastsio.server.engineio.AsyncServer",
     **{
         "return_value.generate_id.side_effect": [str(i) for i in range(1, 10)],
         "return_value.send_packet": mock.AsyncMock(),

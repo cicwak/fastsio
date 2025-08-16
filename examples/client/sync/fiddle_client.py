@@ -1,4 +1,4 @@
-import socketio
+import fastsio
 
 sio = socketio.Client()
 

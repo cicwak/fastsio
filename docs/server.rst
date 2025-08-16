@@ -3,9 +3,9 @@ The Socket.IO Server (fastsio)
 
 This package contains two Socket.IO servers:
 
-- The :func:`socketio.Server` class creates a server compatible with the
+- The :func:`fastsio.Server` class creates a server compatible with the
   Python standard library.
-- The :func:`socketio.AsyncServer` class creates a server compatible with
+- The :func:`fastsio.AsyncServer` class creates a server compatible with
   the ``asyncio`` package.
 
 The methods in the two servers are the same, with the only difference that in
@@ -22,20 +22,20 @@ command::
 Creating a Server Instance
 --------------------------
 
-A Socket.IO server is an instance of class :class:`socketio.Server`::
+A Socket.IO server is an instance of class :class:`fastsio.Server`::
 
     import fastsio as socketio
 
     # create a Socket.IO server
-    sio = socketio.Server()
+    sio = fastsio.Server()
 
-For asyncio based servers, the :class:`socketio.AsyncServer` class provides
+For asyncio based servers, the :class:`fastsio.AsyncServer` class provides
 the same functionality, but in a coroutine friendly format::
 
     import fastsio as socketio
 
     # create a Socket.IO server
-    sio = socketio.AsyncServer()
+    sio = fastsio.AsyncServer()
 
 Running the Server
 ------------------
@@ -50,10 +50,10 @@ Running as a WSGI Application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To configure the Socket.IO server as a WSGI application wrap the server
-instance with the :class:`socketio.WSGIApp` class::
+instance with the :class:`fastsio.WSGIApp` class::
 
     # wrap with a WSGI application
-    app = socketio.WSGIApp(sio)
+    app = fastsio.WSGIApp(sio)
 
 The resulting WSGI application can be executed with supported WSGI servers
 such as `Werkzeug <https://werkzeug.palletsprojects.com>`_ for development and
@@ -64,13 +64,13 @@ such as Flask or Django, the ``WSGIApp`` class can wrap both applications
 together and route traffic to them::
 
     from mywebapp import app  # a Flask, Django, etc. application
-    app = socketio.WSGIApp(sio, app)
+    app = fastsio.WSGIApp(sio, app)
 
 Running as an ASGI Application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To configure the Socket.IO server as an ASGI application wrap the server
-instance with the :class:`socketio.ASGIApp` class::
+instance with the :class:`fastsio.ASGIApp` class::
 
     # wrap with ASGI application
     app = socketio.ASGIApp(sio)

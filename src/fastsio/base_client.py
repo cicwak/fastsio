@@ -7,7 +7,7 @@ import engineio
 
 from . import base_namespace, packet
 
-default_logger = logging.getLogger("socketio.client")
+default_logger = logging.getLogger("fastsio.client")
 reconnecting_clients = []
 
 

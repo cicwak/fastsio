@@ -4,7 +4,7 @@ from litestar import Litestar, MediaType, get
 from litestar.response import File
 from litestar.static_files.config import StaticFilesConfig
 
-import socketio
+import fastsio
 
 sio = socketio.AsyncServer(async_mode="asgi")
 

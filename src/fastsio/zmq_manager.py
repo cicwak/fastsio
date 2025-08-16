@@ -15,7 +15,7 @@ class ZmqManager(PubSubManager):  # pragma: no cover
     follows::
 
         url = "zmq+tcp://hostname:port1+port2"
-        server = socketio.Server(client_manager=socketio.ZmqManager(url))
+        server = fastsio.Server(client_manager=fastsio.ZmqManager(url))
 
     :param url: The connection URL for the zmq message broker,
                 which will need to be provided and running.

@@ -5,7 +5,7 @@ async_mode = None
 
 from flask import Flask, render_template
 
-import socketio
+import fastsio
 
 sio = socketio.Server(async_mode=async_mode)
 app = Flask(__name__)

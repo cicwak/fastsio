@@ -121,7 +121,7 @@ class Client(base_client.BaseClient):
 
         Example usage::
 
-            sio = socketio.Client()
+            sio = fastsio.Client()
             sio.connect("http://localhost:5000")
         """
         if self.connected:

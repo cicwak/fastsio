@@ -4,7 +4,7 @@ import tornado.ioloop
 import tornado.web
 from tornado.options import define, options, parse_command_line
 
-import socketio
+import fastsio
 
 define("port", default=5000, help="run on the given port", type=int)
 define("debug", default=False, help="run in debug mode")

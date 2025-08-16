@@ -1,7 +1,7 @@
 from sanic import Sanic
 from sanic.response import html
 
-import socketio
+import fastsio
 
 sio = socketio.AsyncServer(async_mode="sanic")
 app = Sanic(__name__)

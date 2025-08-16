@@ -863,7 +863,7 @@ class TestAsyncClient:
         new_callable=mock.AsyncMock,
         side_effect=asyncio.TimeoutError,
     )
-    @mock.patch("socketio.client.random.random", side_effect=[1, 0, 0.5])
+    @mock.patch("fastsio.client.random.random", side_effect=[1, 0, 0.5])
     async def test_handle_reconnect(self, random, wait_for):
         c = async_client.AsyncClient()
         c._reconnect_task = "foo"
@@ -884,7 +884,7 @@ class TestAsyncClient:
         new_callable=mock.AsyncMock,
         side_effect=asyncio.TimeoutError,
     )
-    @mock.patch("socketio.client.random.random", side_effect=[1, 0, 0.5])
+    @mock.patch("fastsio.client.random.random", side_effect=[1, 0, 0.5])
     async def test_handle_reconnect_max_delay(self, random, wait_for):
         c = async_client.AsyncClient(reconnection_delay_max=3)
         c._reconnect_task = "foo"
@@ -905,7 +905,7 @@ class TestAsyncClient:
         new_callable=mock.AsyncMock,
         side_effect=asyncio.TimeoutError,
     )
-    @mock.patch("socketio.client.random.random", side_effect=[1, 0, 0.5])
+    @mock.patch("fastsio.client.random.random", side_effect=[1, 0, 0.5])
     async def test_handle_reconnect_max_attempts(self, random, wait_for):
         c = async_client.AsyncClient(reconnection_attempts=2, logger=True)
         c.connection_namespaces = ["/"]
@@ -928,7 +928,7 @@ class TestAsyncClient:
         new_callable=mock.AsyncMock,
         side_effect=[asyncio.TimeoutError, None],
     )
-    @mock.patch("socketio.client.random.random", side_effect=[1, 0, 0.5])
+    @mock.patch("fastsio.client.random.random", side_effect=[1, 0, 0.5])
     async def test_handle_reconnect_aborted(self, random, wait_for):
         c = async_client.AsyncClient(logger=True)
         c.connection_namespaces = ["/"]
@@ -985,7 +985,7 @@ class TestAsyncClient:
             c._send_packet.await_args_list[1][0][0].encode() == expected_packet.encode()
         )
 
-    @mock.patch("socketio.client.random.random", side_effect=[1, 0, 0.5])
+    @mock.patch("fastsio.client.random.random", side_effect=[1, 0, 0.5])
     async def test_shutdown_reconnect(self, random):
         c = async_client.AsyncClient()
         c.connection_namespaces = ["/"]

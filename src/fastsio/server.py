@@ -4,7 +4,7 @@ import engineio
 
 from . import base_server, exceptions, packet
 
-default_logger = logging.getLogger("socketio.server")
+default_logger = logging.getLogger("fastsio.server")
 
 
 class Server(base_server.BaseServer):
@@ -695,11 +695,17 @@ class Server(base_server.BaseServer):
         handler, args = self._get_event_handler(event, namespace, args)
         if handler:
             try:
-                return handler(*args)
+                ret = handler(*args)
+                # Validate response if response_model is defined
+                ret = self._validate_response(handler, ret)
+                return ret
             except TypeError:
                 # legacy disconnect events use only one argument
                 if event == "disconnect":
-                    return handler(*args[:-1])
+                    ret = handler(*args[:-1])
+                    # Validate response if response_model is defined
+                    ret = self._validate_response(handler, ret)
+                    return ret
                 # pragma: no cover
                 raise
         # or else, forward the event to a namespace handler if one exists

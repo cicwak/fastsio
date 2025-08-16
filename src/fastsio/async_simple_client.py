@@ -11,7 +11,7 @@ class AsyncSimpleClient:
     with support for websocket and long-polling transports.
 
     The positional and keyword arguments given in the constructor are passed
-    to the underlying :func:`socketio.AsyncClient` object.
+    to the underlying :func:`fastsio.AsyncClient` object.
     """
 
     client_class = AsyncClient
@@ -135,7 +135,7 @@ class AsyncSimpleClient:
 
         This method schedules the event to be sent out and returns, without
         actually waiting for its delivery. In cases where the client needs to
-        ensure that the event was received, :func:`socketio.SimpleClient.call`
+        ensure that the event was received, :func:`fastsio.SimpleClient.call`
         should be used instead.
         """
         while True:

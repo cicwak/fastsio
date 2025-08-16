@@ -9,7 +9,7 @@ class WSGIApp(engineio.WSGIApp):
     traffic to another WSGI application.
 
     :param socketio_app: The Socket.IO server. Must be an instance of the
-                         ``socketio.Server`` class.
+                         ``fastsio.Server`` class.
     :param wsgi_app: The WSGI app that receives all other traffic.
     :param static_files: A dictionary with static file mapping rules. See the
                          documentation for details on this argument.
@@ -19,12 +19,12 @@ class WSGIApp(engineio.WSGIApp):
 
     Example usage::
 
-        import socketio
+        import fastsio
         import eventlet
         from . import wsgi_app
 
-        sio = socketio.Server()
-        app = socketio.WSGIApp(sio, wsgi_app)
+        sio = fastsio.Server()
+        app = fastsio.WSGIApp(sio, wsgi_app)
         eventlet.wsgi.server(eventlet.listen(("", 8000)), app)
     """
 
