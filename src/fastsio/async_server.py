@@ -1,7 +1,19 @@
 import asyncio
 import inspect
+
 # pyright: reportMissingImports=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportUnknownParameterType=false
-from typing import Any, AsyncContextManager, Callable, Dict, List, Optional, Set, Union, TYPE_CHECKING, Coroutine
+from typing import (
+    Any,
+    AsyncContextManager,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Set,
+    Union,
+    TYPE_CHECKING,
+    Coroutine,
+)
 
 import engineio
 
@@ -362,7 +374,9 @@ class AsyncServer(base_server.BaseServer):
             else None
         )
 
-    async def enter_room(self, sid: str, room: str, namespace: Optional[str] = None) -> None:
+    async def enter_room(
+        self, sid: str, room: str, namespace: Optional[str] = None
+    ) -> None:
         """Enter a room.
 
         This function adds the client to a room. The :func:`emit` and
@@ -380,7 +394,9 @@ class AsyncServer(base_server.BaseServer):
         self.logger.info("%s is entering room %s [%s]", sid, room, namespace)
         await self.manager.enter_room(sid, namespace, room)
 
-    async def leave_room(self, sid: str, room: str, namespace: Optional[str] = None) -> None:
+    async def leave_room(
+        self, sid: str, room: str, namespace: Optional[str] = None
+    ) -> None:
         """Leave a room.
 
         This function removes the client from a room.
@@ -411,7 +427,9 @@ class AsyncServer(base_server.BaseServer):
         self.logger.info("room %s is closing [%s]", room, namespace)
         await self.manager.close_room(room, namespace)
 
-    async def get_session(self, sid: str, namespace: Optional[str] = None) -> Dict[str, Any]:
+    async def get_session(
+        self, sid: str, namespace: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Return the user session for a client.
 
         :param sid: The session id of the client.
@@ -427,7 +445,9 @@ class AsyncServer(base_server.BaseServer):
         eio_session = await self.eio.get_session(eio_sid)
         return eio_session.setdefault(namespace, {})
 
-    async def save_session(self, sid: str, session: Dict[str, Any], namespace: Optional[str] = None) -> None:
+    async def save_session(
+        self, sid: str, session: Dict[str, Any], namespace: Optional[str] = None
+    ) -> None:
         """Store the user session for a client.
 
         :param sid: The session id of the client.
@@ -440,7 +460,9 @@ class AsyncServer(base_server.BaseServer):
         eio_session = await self.eio.get_session(eio_sid)
         eio_session[namespace] = session
 
-    def session(self, sid: str, namespace: Optional[str] = None) -> AsyncContextManager[Dict[str, Any]]:
+    def session(
+        self, sid: str, namespace: Optional[str] = None
+    ) -> AsyncContextManager[Dict[str, Any]]:
         """Return the user session for a client with context manager syntax.
 
         :param sid: The session id of the client.
@@ -465,7 +487,9 @@ class AsyncServer(base_server.BaseServer):
         """
 
         class _session_context_manager:
-            def __init__(self, server: "AsyncServer", sid: str, namespace: Optional[str]):
+            def __init__(
+                self, server: "AsyncServer", sid: str, namespace: Optional[str]
+            ):
                 self.server = server
                 self.sid = sid
                 self.namespace = namespace
@@ -484,7 +508,9 @@ class AsyncServer(base_server.BaseServer):
 
         return _session_context_manager(self, sid, namespace)
 
-    async def disconnect(self, sid: str, namespace: Optional[str] = None, ignore_queue: bool = False) -> None:
+    async def disconnect(
+        self, sid: str, namespace: Optional[str] = None, ignore_queue: bool = False
+    ) -> None:
         """Disconnect a client.
 
         :param sid: Session ID of the client.
@@ -533,7 +559,9 @@ class AsyncServer(base_server.BaseServer):
         """
         return await self.eio.handle_request(*args, **kwargs)
 
-    def start_background_task(self, target: Callable[..., Coroutine[Any, Any, Any]], *args: Any, **kwargs: Any) -> asyncio.Task[Any]:
+    def start_background_task(
+        self, target: Callable[..., Coroutine[Any, Any, Any]], *args: Any, **kwargs: Any
+    ) -> asyncio.Task[Any]:
         """Start a background task using the appropriate async model.
 
         This is a utility function that applications can use to start a
@@ -562,7 +590,14 @@ class AsyncServer(base_server.BaseServer):
 
     def instrument(
         self,
-        auth: Optional[Union[bool, Dict[str, Any], List[Dict[str, Any]], Callable[[Dict[str, Any]], bool]]] = None,
+        auth: Optional[
+            Union[
+                bool,
+                Dict[str, Any],
+                List[Dict[str, Any]],
+                Callable[[Dict[str, Any]], bool],
+            ]
+        ] = None,
         mode: str = "development",
         read_only: bool = False,
         server_id: Optional[str] = None,
@@ -624,7 +659,9 @@ class AsyncServer(base_server.BaseServer):
         """Send a raw Engine.IO packet to a client."""
         await self.eio.send_packet(eio_sid, eio_pkt)
 
-    async def _handle_connect(self, eio_sid: str, namespace: Optional[str], data: Optional[Any]) -> None:
+    async def _handle_connect(
+        self, eio_sid: str, namespace: Optional[str], data: Optional[Any]
+    ) -> None:
         """Handle a client connection request."""
         namespace = namespace or "/"
         sid = None
@@ -691,7 +728,9 @@ class AsyncServer(base_server.BaseServer):
                 self.packet_class(packet.CONNECT, {"sid": sid}, namespace=namespace),
             )
 
-    async def _handle_disconnect(self, eio_sid: str, namespace: Optional[str], reason: Optional[str] = None) -> None:
+    async def _handle_disconnect(
+        self, eio_sid: str, namespace: Optional[str], reason: Optional[str] = None
+    ) -> None:
         """Handle a client disconnect."""
         namespace = namespace or "/"
         sid = self.manager.sid_from_eio_sid(eio_sid, namespace)
@@ -703,7 +742,9 @@ class AsyncServer(base_server.BaseServer):
         )
         await self.manager.disconnect(sid, namespace, ignore_queue=True)
 
-    async def _handle_event(self, eio_sid: str, namespace: Optional[str], id: Optional[int], data: Any) -> None:
+    async def _handle_event(
+        self, eio_sid: str, namespace: Optional[str], id: Optional[int], data: Any
+    ) -> None:
         """Handle an incoming client event."""
         namespace = namespace or "/"
         sid = self.manager.sid_from_eio_sid(eio_sid, namespace)
@@ -746,14 +787,18 @@ class AsyncServer(base_server.BaseServer):
                 self.packet_class(packet.ACK, namespace=namespace, id=id, data=data),
             )
 
-    async def _handle_ack(self, eio_sid: str, namespace: Optional[str], id: Optional[int], data: Any) -> None:
+    async def _handle_ack(
+        self, eio_sid: str, namespace: Optional[str], id: Optional[int], data: Any
+    ) -> None:
         """Handle ACK packets from the client."""
         namespace = namespace or "/"
         sid = self.manager.sid_from_eio_sid(eio_sid, namespace)
         self.logger.info("received ack from %s [%s]", sid, namespace)
         await self.manager.trigger_callback(sid, id, data)
 
-    async def _trigger_event(self, event: str, namespace: Optional[str], *args: Any) -> Any:
+    async def _trigger_event(
+        self, event: str, namespace: Optional[str], *args: Any
+    ) -> Any:
         """Invoke an application event handler."""
         # Keep originals to support dependency injection from raw payload
         original_args = args
@@ -812,7 +857,9 @@ class AsyncServer(base_server.BaseServer):
 
                 # Inject AsyncServer by annotation
                 try:
-                    from .async_server import AsyncServer as _AsyncServerType  # local import to avoid cycles
+                    from .async_server import (
+                        AsyncServer as _AsyncServerType,
+                    )  # local import to avoid cycles
                 except Exception:  # pragma: no cover
                     _AsyncServerType = None  # type: ignore
 
@@ -842,7 +889,9 @@ class AsyncServer(base_server.BaseServer):
                     if event == "disconnect":
                         di_kwargs.setdefault(pname, args[-1])
                     else:
-                        raise ValueError("You can`t use `Reason` not in disconnect handler")
+                        raise ValueError(
+                            "You can`t use `Reason` not in disconnect handler"
+                        )
                     continue
 
                 if ann is Data:
@@ -854,7 +903,9 @@ class AsyncServer(base_server.BaseServer):
                     continue
 
                 try:
-                    is_model = isinstance(ann, type) and issubclass(ann, _PydanticBaseModel)  # type: ignore[arg-type]
+                    is_model = isinstance(ann, type) and issubclass(
+                        ann, _PydanticBaseModel
+                    )  # type: ignore[arg-type]
                 except Exception:
                     is_model = False
                 if is_model:
@@ -865,9 +916,13 @@ class AsyncServer(base_server.BaseServer):
                     try:
                         # Pydantic v2: model_validate
                         if hasattr(ann, "model_validate"):
-                            di_kwargs.setdefault(pname, ann.model_validate(payload_for_model))  # type: ignore[attr-defined]
+                            di_kwargs.setdefault(
+                                pname, ann.model_validate(payload_for_model)
+                            )  # type: ignore[attr-defined]
                         else:  # Pydantic v1 fallback
-                            di_kwargs.setdefault(pname, ann.parse_obj(payload_for_model))  # type: ignore[attr-defined]
+                            di_kwargs.setdefault(
+                                pname, ann.parse_obj(payload_for_model)
+                            )  # type: ignore[attr-defined]
                     except Exception as exc:  # pragma: no cover - validation error path
                         raise ValueError(
                             f"Failed to validate payload for '{ann.__name__}': {exc}"
@@ -894,7 +949,7 @@ class AsyncServer(base_server.BaseServer):
                         ret = handler(**di_kwargs)
                     else:  # pragma: no cover
                         raise
-            
+
             # Validate response if response_model is defined
             ret = self._validate_response(handler, ret)
             return ret

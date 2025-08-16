@@ -1,4 +1,5 @@
 import engineio
+
 # pyright: reportMissingImports=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportUnknownParameterType=false
 import json
 from typing import Any
@@ -17,7 +18,12 @@ if TYPE_CHECKING:  # pragma: no cover - typing shim for engineio.ASGIApp
     from typing import Awaitable, Callable
 
     class _BaseASGIApp:  # minimal protocol
-        async def __call__(self, scope: Any, receive: Callable[[], Awaitable[Any]], send: Callable[[Any], Awaitable[None]]): ...
+        async def __call__(
+            self,
+            scope: Any,
+            receive: Callable[[], Awaitable[Any]],
+            send: Callable[[Any], Awaitable[None]],
+        ): ...
         def __init__(self, *args: Any, **kwargs: Any) -> None: ...
 else:  # runtime alias
     _BaseASGIApp = engineio.ASGIApp  # type: ignore[assignment]
@@ -173,6 +179,7 @@ class ASGIApp(_BaseASGIApp):  # pragma: no cover
         # Simple HTML page embedding AsyncAPI React component (CDN)
         # Build schema inline to avoid fetch/CORS/issues and guarantee correctness
         from .asyncapi import AsyncAPIGenerator  # local import
+
         gen = AsyncAPIGenerator(self._fastsio_server.asyncapi_config)
         schema_payload = gen.generate(self._fastsio_server)
         schema_json = json.dumps(schema_payload)

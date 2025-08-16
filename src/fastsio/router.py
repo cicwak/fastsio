@@ -54,18 +54,26 @@ class RouterSIO:
                         # Validate that all values are Pydantic models or valid types
                         for event_name, model in eff_resp_model.items():
                             if not isinstance(event_name, str):
-                                raise ValueError(f"response_model keys must be strings, got {type(event_name)}")
+                                raise ValueError(
+                                    f"response_model keys must be strings, got {type(event_name)}"
+                                )
                             # Check if it's a Pydantic model (basic check)
-                            if hasattr(model, '__bases__'):
+                            if hasattr(model, "__bases__"):
                                 try:
                                     # Import Pydantic BaseModel locally to avoid import issues
                                     from pydantic import BaseModel as _PydanticBaseModel
-                                    if not (isinstance(model, type) and issubclass(model, _PydanticBaseModel)):
-                                        raise ValueError(f"response_model['{event_name}'] must be a Pydantic BaseModel, got {type(model)}")
+
+                                    if not (
+                                        isinstance(model, type)
+                                        and issubclass(model, _PydanticBaseModel)
+                                    ):
+                                        raise ValueError(
+                                            f"response_model['{event_name}'] must be a Pydantic BaseModel, got {type(model)}"
+                                        )
                                 except ImportError:
                                     # If Pydantic is not available, skip validation
                                     pass
-                    
+
                     setattr(h, "_fastsio_response_model", eff_resp_model)
                 except Exception:
                     pass
@@ -83,7 +91,9 @@ class RouterSIO:
         return set_handler
 
     # Convenience decorator mirrors Server.event
-    def event(self, *args: Any, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def event(
+        self, *args: Any, **kwargs: Any
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
             # invoked without arguments: @router.event
             return self.on(args[0].__name__)(args[0])
@@ -94,7 +104,9 @@ class RouterSIO:
 
         return set_handler
 
-    def register_namespace(self, namespace_handler: base_namespace.BaseServerNamespace) -> None:
+    def register_namespace(
+        self, namespace_handler: base_namespace.BaseServerNamespace
+    ) -> None:
         """Queue a class-based namespace handler for registration.
 
         The actual registration occurs when the router is attached to a server
@@ -114,5 +126,3 @@ class RouterSIO:
 
     def iter_namespace_handlers(self) -> List[base_namespace.BaseServerNamespace]:
         return list(self._namespace_handlers)
-
-

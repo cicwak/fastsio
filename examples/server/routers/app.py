@@ -8,4 +8,3 @@ sio = fastsio.AsyncServer(
 
 # added all routers
 sio.add_router(router=router)
-

@@ -1,6 +1,15 @@
 from pydantic import BaseModel
 
-from fastsio import SocketID, Environ, Auth, AsyncServer, Data, Reason, ASGIApp, RouterSIO
+from fastsio import (
+    SocketID,
+    Environ,
+    Auth,
+    AsyncServer,
+    Data,
+    Reason,
+    ASGIApp,
+    RouterSIO,
+)
 
 router = RouterSIO()
 
@@ -24,7 +33,7 @@ async def connect(sid: SocketID, environ: Environ, auth: Auth):
 
 @router.event
 async def disconnect(sid: SocketID, reason: Reason):
-    print('disconnect ', sid, reason)
+    print("disconnect ", sid, reason)
 
 
 sio = AsyncServer(

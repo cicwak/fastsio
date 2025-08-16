@@ -1,4 +1,5 @@
 import inspect
+
 # pyright: reportMissingImports=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportUnknownParameterType=false
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple, Union, get_args, get_origin
@@ -38,7 +39,9 @@ class AsyncAPIGenerator:
                 all_handlers.append((ns or "/", event, handler))
 
         # Skip reserved events
-        reserved: List[str] = getattr(server, "reserved_events", ["connect", "disconnect"])  # type: ignore
+        reserved: List[str] = getattr(
+            server, "reserved_events", ["connect", "disconnect"]
+        )  # type: ignore
 
         for namespace, event, handler in all_handlers:
             if event in reserved:
@@ -46,19 +49,27 @@ class AsyncAPIGenerator:
 
             # Check if handler has response_model dict
             response_model = getattr(handler, "_fastsio_response_model", None)
-            
+
             if isinstance(response_model, dict):
                 # For response_model dict, create separate channels for each event
                 for response_event_name, model in response_model.items():
-                    response_address = self._build_channel_name(namespace, response_event_name, handler)
+                    response_address = self._build_channel_name(
+                        namespace, response_event_name, handler
+                    )
                     response_channel_key = self._sanitize_key(response_address)
-                    response_ch_obj = channels.setdefault(response_channel_key, {"address": response_address})
-                    response_messages_map: Dict[str, Any] = response_ch_obj.setdefault("messages", {})
-                    
+                    response_ch_obj = channels.setdefault(
+                        response_channel_key, {"address": response_address}
+                    )
+                    response_messages_map: Dict[str, Any] = response_ch_obj.setdefault(
+                        "messages", {}
+                    )
+
                     # Create response schema for this specific event
                     model_schema = self._to_schema(model)
                     if model_schema:
-                        resp_msg_key = self._sanitize_key(f"{response_event_name}Response")
+                        resp_msg_key = self._sanitize_key(
+                            f"{response_event_name}Response"
+                        )
                         response_messages_map[resp_msg_key] = {
                             "name": f"{response_event_name}:response",
                             "payload": model_schema,
@@ -66,18 +77,22 @@ class AsyncAPIGenerator:
                         op_id = f"{response_channel_key}__send"
                         operations[op_id] = {
                             "action": "send",
-                            "channel": {"$ref": f"#/channels/{self._escape_ref(response_channel_key)}"},
+                            "channel": {
+                                "$ref": f"#/channels/{self._escape_ref(response_channel_key)}"
+                            },
                             "messages": [
-                                {"$ref": f"#/channels/{self._escape_ref(response_channel_key)}/messages/{self._escape_ref(resp_msg_key)}"}
+                                {
+                                    "$ref": f"#/channels/{self._escape_ref(response_channel_key)}/messages/{self._escape_ref(resp_msg_key)}"
+                                }
                             ],
                         }
-                
+
                 # Still create the receive channel for the original handler event
                 address = self._build_channel_name(namespace, event, handler)
                 channel_key = self._sanitize_key(address)
                 ch_obj = channels.setdefault(channel_key, {"address": address})
                 messages_map: Dict[str, Any] = ch_obj.setdefault("messages", {})
-                
+
                 request_schema = self._infer_request_schema(handler)
                 if request_schema is not None:
                     req_msg_key = self._sanitize_key(f"{event}Request")
@@ -88,9 +103,13 @@ class AsyncAPIGenerator:
                     op_id = f"{channel_key}__receive"
                     operations[op_id] = {
                         "action": "receive",
-                        "channel": {"$ref": f"#/channels/{self._escape_ref(channel_key)}"},
+                        "channel": {
+                            "$ref": f"#/channels/{self._escape_ref(channel_key)}"
+                        },
                         "messages": [
-                            {"$ref": f"#/channels/{self._escape_ref(channel_key)}/messages/{self._escape_ref(req_msg_key)}"}
+                            {
+                                "$ref": f"#/channels/{self._escape_ref(channel_key)}/messages/{self._escape_ref(req_msg_key)}"
+                            }
                         ],
                     }
             else:
@@ -117,9 +136,13 @@ class AsyncAPIGenerator:
                     op_id = f"{channel_key}__receive"
                     operations[op_id] = {
                         "action": "receive",
-                        "channel": {"$ref": f"#/channels/{self._escape_ref(channel_key)}"},
+                        "channel": {
+                            "$ref": f"#/channels/{self._escape_ref(channel_key)}"
+                        },
                         "messages": [
-                            {"$ref": f"#/channels/{self._escape_ref(channel_key)}/messages/{self._escape_ref(req_msg_key)}"}
+                            {
+                                "$ref": f"#/channels/{self._escape_ref(channel_key)}/messages/{self._escape_ref(req_msg_key)}"
+                            }
                         ],
                     }
                 if response_schema is not None:
@@ -131,9 +154,13 @@ class AsyncAPIGenerator:
                     op_id = f"{channel_key}__send"
                     operations[op_id] = {
                         "action": "send",
-                        "channel": {"$ref": f"#/channels/{self._escape_ref(channel_key)}"},
+                        "channel": {
+                            "$ref": f"#/channels/{self._escape_ref(channel_key)}"
+                        },
                         "messages": [
-                            {"$ref": f"#/channels/{self._escape_ref(channel_key)}/messages/{self._escape_ref(resp_msg_key)}"}
+                            {
+                                "$ref": f"#/channels/{self._escape_ref(channel_key)}/messages/{self._escape_ref(resp_msg_key)}"
+                            }
                         ],
                     }
 
@@ -280,7 +307,10 @@ class AsyncAPIGenerator:
 
         if origin in (dict, Dict):
             value_type = args[1] if len(args) == 2 else Any
-            return {"type": "object", "additionalProperties": self._to_schema(value_type)}
+            return {
+                "type": "object",
+                "additionalProperties": self._to_schema(value_type),
+            }
 
         # Primitives
         python_to_json: Dict[Any, str] = {
@@ -300,5 +330,3 @@ class AsyncAPIGenerator:
 
         # Fallback to string
         return {"type": "string"}
-
-
