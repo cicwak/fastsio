@@ -54,7 +54,7 @@ async def connect(
     return True
 
 @sio.event
-async def disconnect(sid):
+async def disconnect(sid: SocketID):
     print(f"Client {sid} disconnected")
 
 @sio.on("message")
@@ -131,6 +131,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 import fastsio
+from fastsio import Environ, Auth, SocketID
 
 app = FastAPI()
 sio = fastsio.AsyncServer(async_mode="asgi")
@@ -140,7 +141,7 @@ async def index():
     return {"message": "FastAPI + fastsio"}
 
 @sio.event
-async def connect(sid, environ, auth):
+async def connect(sid: SocketID, environ: Environ, auth: Auth):
     await sio.emit("hello", {"message": "Welcome!"}, to=sid)
 
 # Combine FastAPI and Socket.IO
@@ -209,8 +210,8 @@ Compatibility table with JavaScript Socket.IO:
 | JavaScript Socket.IO | Socket.IO protocol | Engine.IO protocol | fastsio version |
 |---------------------|-------------------|-------------------|-----------------|
 | 0.9.x               | 1, 2              | 1, 2              | Not supported   |
-| 1.x and 2.x         | 3, 4              | 3                 | any version     |
-| 3.x and 4.x         | 5                 | 4                 | any version     |
+| 1.x and 2.x         | 3, 4              | 3                 | Any version     |
+| 3.x and 4.x         | 5                 | 4                 | Any version     |
 
 ## Documentation
 

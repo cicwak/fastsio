@@ -18,16 +18,6 @@
 pip install fastsio
 ```
 
-Для клиентской части:
-```bash
-pip install fastsio[client]
-```
-
-Для async клиента:
-```bash
-pip install fastsio[asyncio_client]
-```
-
 ## Основные отличия от python-socketio
 
 | Особенность | python-socketio | fastsio |
@@ -45,7 +35,7 @@ pip install fastsio[asyncio_client]
 
 ```python
 import fastsio
-from fastsio import ASGIApp
+from fastsio import ASGIApp, SocketID, Environ, Auth, Data
 
 # Создание сервера
 sio = fastsio.AsyncServer(
@@ -54,16 +44,16 @@ sio = fastsio.AsyncServer(
 )
 
 @sio.event
-async def connect(sid, environ, auth):
+async def connect(sid: SocketID, environ: Environ, auth: Auth):
     print(f"Клиент {sid} подключился")
     return True
 
 @sio.event
-async def disconnect(sid):
+async def disconnect(sid: SocketID):
     print(f"Клиент {sid} отключился")
 
 @sio.on("message")
-async def handle_message(sid, data):
+async def handle_message(sid: SocketID, data: Data):
     await sio.emit("response", f"Получено: {data}", to=sid)
 
 # ASGI приложение
@@ -145,7 +135,7 @@ async def index():
     return {"message": "FastAPI + fastsio"}
 
 @sio.event
-async def connect(sid, environ, auth):
+async def connect(sid: SocketID, environ: Environ, auth: Auth):
     await sio.emit("hello", {"message": "Добро пожаловать!"}, to=sid)
 
 # Объединение FastAPI и Socket.IO
@@ -153,38 +143,6 @@ combined_app = fastsio.ASGIApp(sio, app)
 
 if __name__ == "__main__":
     uvicorn.run(combined_app, host="127.0.0.1", port=5000)
-```
-
-### Клиент
-
-```python
-import asyncio
-import fastsio
-
-sio = fastsio.AsyncClient()
-
-@sio.event
-async def connect():
-    print("Подключено к серверу")
-    await sio.emit("send_message", {
-        "text": "Привет, сервер!",
-        "room": "general"
-    })
-
-@sio.event
-async def new_message(data):
-    print(f"Новое сообщение: {data}")
-
-@sio.event
-async def disconnect():
-    print("Отключено от сервера")
-
-async def main():
-    await sio.connect("http://localhost:5000")
-    await sio.wait()
-
-if __name__ == "__main__":
-    asyncio.run(main())
 ```
 
 ## Расширенные возможности
@@ -243,18 +201,17 @@ async def example_handler(
 
 Таблица совместимости с JavaScript Socket.IO:
 
-| JavaScript Socket.IO | Socket.IO протокол | Engine.IO протокол | fastsio версия |
-|---------------------|-------------------|-------------------|----------------|
+| JavaScript Socket.IO | Socket.IO протокол | Engine.IO протокол | fastsio версия    |
+|---------------------|-------------------|-------------------|-------------------|
 | 0.9.x               | 1, 2              | 1, 2              | Не поддерживается |
-| 1.x и 2.x           | 3, 4              | 3                 | 4.x            |
-| 3.x и 4.x           | 5                 | 4                 | 5.x            |
+| 1.x и 2.x           | 3, 4              | 3                 | Любая версия      |
+| 3.x и 4.x           | 5                 | 4                 | Любая версия      |
 
 ## Документация
 
 - [Полная документация](http://fastsio.readthedocs.io/)
 - [PyPI](https://pypi.python.org/pypi/fastsio)
 - [Changelog](https://github.com/cicwak/fastsio/blob/main/CHANGES.md)
-- [Вопросы на Stack Overflow](https://stackoverflow.com/questions/tagged/python-socketio)
 
 ## Вклад в проект
 
