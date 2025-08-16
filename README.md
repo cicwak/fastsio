@@ -18,15 +18,6 @@
 pip install fastsio
 ```
 
-For client functionality:
-```bash
-pip install fastsio[client]
-```
-
-For async client:
-```bash
-pip install fastsio[asyncio_client]
-```
 
 ## Key Differences from python-socketio
 
@@ -56,8 +47,8 @@ sio = fastsio.AsyncServer(
 @sio.event
 async def connect(
     sid: SocketID, 
-        environ: Environ, 
-        auth: Auth,
+    environ: Environ, 
+    auth: Auth,
 ):
     print(f"Client {sid} connected")
     return True
@@ -159,38 +150,6 @@ if __name__ == "__main__":
     uvicorn.run(combined_app, host="127.0.0.1", port=5000)
 ```
 
-### Client
-
-```python
-import asyncio
-import fastsio
-
-sio = fastsio.AsyncClient()
-
-@sio.event
-async def connect():
-    print("Connected to server")
-    await sio.emit("send_message", {
-        "text": "Hello, server!",
-        "room": "general"
-    })
-
-@sio.event
-async def new_message(data):
-    print(f"New message: {data}")
-
-@sio.event
-async def disconnect():
-    print("Disconnected from server")
-
-async def main():
-    await sio.connect("http://localhost:5000")
-    await sio.wait()
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
 ## Advanced Features
 
 ### Routers for Code Organization
@@ -248,17 +207,16 @@ async def example_handler(
 Compatibility table with JavaScript Socket.IO:
 
 | JavaScript Socket.IO | Socket.IO protocol | Engine.IO protocol | fastsio version |
-|---------------------|-------------------|-------------------|----------------|
-| 0.9.x               | 1, 2              | 1, 2              | Not supported |
-| 1.x and 2.x         | 3, 4              | 3                 | 4.x            |
-| 3.x and 4.x         | 5                 | 4                 | 5.x            |
+|---------------------|-------------------|-------------------|-----------------|
+| 0.9.x               | 1, 2              | 1, 2              | Not supported   |
+| 1.x and 2.x         | 3, 4              | 3                 | any version     |
+| 3.x and 4.x         | 5                 | 4                 | any version     |
 
 ## Documentation
 
 - [Full Documentation](http://fastsio.readthedocs.io/)
-- [PyPI](https://pypi.python.org/pypi/fastsio)
+- [PyPI](https://pypi.org/project/fastsio/)
 - [Changelog](https://github.com/cicwak/fastsio/blob/main/CHANGES.md)
-- [Questions on Stack Overflow](https://stackoverflow.com/questions/tagged/python-socketio)
 
 ## Contributing
 
