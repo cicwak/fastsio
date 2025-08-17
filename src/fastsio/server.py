@@ -732,51 +732,44 @@ class Server(base_server.BaseServer):
             if event == "disconnect" and len(args) > 0:
                 disconnect_reason = args[-1]
 
-            # Use new ContextVar-based dependency injection
-            try:
-                from .dependency import run_with_context
-                
-                # For sync handlers, we need to handle differently
-                if inspect.iscoroutinefunction(handler):
-                    # This shouldn't happen in sync server, but just in case
-                    import asyncio
-                    try:
-                        loop = asyncio.get_running_loop()
-                        # We can't await in sync context, so this is an error
-                        raise RuntimeError("Async handler in sync server - use AsyncServer instead")
-                    except RuntimeError as e:
-                        if "no running event loop" in str(e):
-                            # No loop, create one for this call
-                            ret = asyncio.run(run_with_context(
-                                handler,
-                                socket_id=original_sid,
-                                environ=computed_environ,
-                                auth=connect_auth_payload if event == "connect" else None,
-                                reason=disconnect_reason if event == "disconnect" else None,
-                                data=payload_data,
-                                event=event,
-                                server=self,
-                            ))
-                        else:
-                            raise
-                else:
-                    # Sync handler - use sync version of DI
-                    ret = self._run_sync_with_context(
-                        handler,
-                        socket_id=original_sid,
-                        environ=computed_environ,
-                        auth=connect_auth_payload if event == "connect" else None,
-                        reason=disconnect_reason if event == "disconnect" else None,
-                        data=payload_data,
-                        event=event,
-                        server=self,
-                    )
-            except ImportError:
-                # Fallback to old system if dependency module not available
-                ret = self._trigger_event_legacy(event, namespace, *original_args)
-            except Exception:
-                # Fallback on any error during development
-                ret = self._trigger_event_legacy(event, namespace, *original_args)
+            # Use ContextVar-based dependency injection
+            from .dependency import run_with_context
+            
+            # For sync handlers, we need to handle differently
+            if inspect.iscoroutinefunction(handler):
+                # This shouldn't happen in sync server, but just in case
+                import asyncio
+                try:
+                    loop = asyncio.get_running_loop()
+                    # We can't await in sync context, so this is an error
+                    raise RuntimeError("Async handler in sync server - use AsyncServer instead")
+                except RuntimeError as e:
+                    if "no running event loop" in str(e):
+                        # No loop, create one for this call
+                        ret = asyncio.run(run_with_context(
+                            handler,
+                            socket_id=original_sid,
+                            environ=computed_environ,
+                            auth=connect_auth_payload if event == "connect" else None,
+                            reason=disconnect_reason if event == "disconnect" else None,
+                            data=payload_data,
+                            event=event,
+                            server=self,
+                        ))
+                    else:
+                        raise
+            else:
+                # Sync handler - use sync version of DI
+                ret = self._run_sync_with_context(
+                    handler,
+                    socket_id=original_sid,
+                    environ=computed_environ,
+                    auth=connect_auth_payload if event == "connect" else None,
+                    reason=disconnect_reason if event == "disconnect" else None,
+                    data=payload_data,
+                    event=event,
+                    server=self,
+                )
 
             # Validate response if response_model is defined
             ret = self._validate_response(handler, ret)
@@ -797,6 +790,7 @@ class Server(base_server.BaseServer):
         data: Any = None,
         event: Optional[str] = None,
         server: Any = None,
+        **kwargs
     ) -> Any:
         """
         Run a synchronous function with dependency injection context.
@@ -815,141 +809,10 @@ class Server(base_server.BaseServer):
             event=event,
             server=server,
         ):
-            resolved = _resolve_sync_dependencies(func)
+            resolved = _resolve_sync_dependencies(func, **kwargs)
             return func(**resolved)
 
-    def _trigger_event_legacy(
-        self, event: str, namespace: Optional[str], *args: Any
-    ) -> Any:
-        """Legacy dependency injection system for backward compatibility."""
-        # Keep originals to support dependency injection from raw payload
-        original_args = args
-        original_sid: Optional[str] = None
-        if original_args and isinstance(original_args[0], str):
-            original_sid = original_args[0]
 
-        # first see if we have an explicit handler for the event
-        handler, args = self._get_event_handler(event, namespace, args)
-        if handler:
-            # Build DI kwargs for supported injections, without breaking
-            # positional compatibility.
-            di_kwargs: Dict[str, Any] = {}
-
-            try:
-                sig = inspect.signature(handler)  # type: ignore[arg-type]
-                param_items = list(sig.parameters.items())
-            except (TypeError, ValueError):  # builtins/callables without signature
-                param_items = []
-
-            # Prepare payload for Pydantic, only for non-reserved events
-            payload_for_model: Any = None
-            if event not in base_server.BaseServer.reserved_events:
-                if len(original_args) >= 2:
-                    candidate_payload = original_args[1]
-                    # Only accept single-argument payload for model injection
-                    if len(original_args[1:]) == 1:
-                        payload_for_model = candidate_payload
-
-            # Prepare environ/auth for DI
-            computed_environ: Any = None
-            if original_sid is not None:
-                try:
-                    computed_environ = self.get_environ(original_sid, namespace)
-                except Exception:
-                    computed_environ = None
-            connect_auth_payload: Any = None
-            if event == "connect" and len(original_args) >= 3:
-                connect_auth_payload = original_args[2]
-
-            for pname, p in param_items:
-                ann = p.annotation
-
-                # Inject Server by annotation
-                try:
-                    from .server import (
-                        Server as _ServerType,
-                    )  # local import to avoid cycles
-                except Exception:  # pragma: no cover
-                    _ServerType = None  # type: ignore
-
-                if _ServerType is not None and ann is _ServerType:
-                    di_kwargs.setdefault(pname, self)
-                    continue
-
-                # Inject SocketID by annotation
-                if ann is SocketID and original_sid is not None:
-                    di_kwargs.setdefault(pname, original_sid)
-                    continue
-
-                # Inject Environ by annotation
-                if ann is Environ:
-                    di_kwargs.setdefault(pname, computed_environ or {})
-                    continue
-
-                # Inject Auth by annotation (connect event carries auth payload)
-                if ann is Auth:
-                    if event == "connect":
-                        di_kwargs.setdefault(pname, connect_auth_payload or None)
-                    else:
-                        raise ValueError("You can`t use `Auth` not in connect handler")
-                    continue
-
-                if ann is Reason:
-                    if event == "disconnect":
-                        di_kwargs.setdefault(pname, args[-1])
-                    else:
-                        raise ValueError(
-                            "You can`t use `Reason` not in disconnect handler"
-                        )
-                    continue
-
-                if ann is Data:
-                    di_kwargs.setdefault(pname, args[-1])
-                    continue
-
-                if ann is Event:
-                    di_kwargs.setdefault(pname, event)
-                    continue
-
-                # Handle Pydantic models
-                try:
-                    from pydantic import BaseModel as _PydanticBaseModel
-                    is_model = isinstance(ann, type) and issubclass(
-                        ann, _PydanticBaseModel
-                    )  # type: ignore[arg-type]
-                except Exception:
-                    is_model = False
-                if is_model:
-                    if payload_for_model is None:
-                        raise ValueError(
-                            f"Cannot inject Pydantic model '{ann.__name__}': expected a single payload argument"
-                        )
-                    try:
-                        # Pydantic v2: model_validate
-                        if hasattr(ann, "model_validate"):
-                            di_kwargs.setdefault(
-                                pname, ann.model_validate(payload_for_model)
-                            )  # type: ignore[attr-defined]
-                        else:  # Pydantic v1 fallback
-                            di_kwargs.setdefault(
-                                pname, ann.parse_obj(payload_for_model)
-                            )  # type: ignore[attr-defined]
-                    except Exception as exc:  # pragma: no cover - validation error path
-                        raise ValueError(
-                            f"Failed to validate payload for '{ann.__name__}': {exc}"
-                        ) from exc
-
-            try:
-                ret = handler(**di_kwargs)
-            except TypeError:
-                # legacy disconnect events use only one argument
-                if event == "disconnect":
-                    ret = handler(**di_kwargs)
-                else:  # pragma: no cover
-                    raise
-
-            return ret
-        return self.not_handled
 
     def _handle_eio_connect(self, eio_sid, environ):
         """Handle the Engine.IO connection event."""

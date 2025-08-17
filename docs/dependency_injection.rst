@@ -278,45 +278,55 @@ The new dependency injection system works with both AsyncServer and synchronous 
 - AsyncAPI documentation is fully supported
 - Thread-safe ContextVar ensures proper isolation between requests
 
-Migration from Old System
--------------------------
+Architecture and Performance
+----------------------------
 
-The old dependency injection system is still supported for backward compatibility,
-but it's recommended to migrate to the new ContextVar-based system:
+The ContextVar-based dependency injection system provides:
 
-**Old way:**
+**Clean Architecture:**
+
+- Dependencies are resolved automatically based on type annotations
+- No need for manual parameter passing through the call stack
+- Clear separation between business logic and infrastructure concerns
+
+**High Performance:**
+
+- Minimal overhead - dependencies are resolved only when needed
+- Built-in caching prevents redundant computations within a request
+- ContextVar provides native Python performance for context isolation
+
+**Type Safety:**
+
+- Full support for type hints and static analysis
+- Pydantic integration for automatic data validation
+- Clear error messages when dependencies cannot be resolved
+
+**Example of clean handler design:**
 
 .. code:: python
 
-    @router.on("handler")
-    async def handler(sid: SocketID, server: AsyncServer, data: Data):
-        # Dependencies injected via parameter inspection
-        pass
-
-**New way (same syntax, better implementation):**
-
-.. code:: python
-
-    @router.on("handler")  
-    async def handler(sid: SocketID, server: AsyncServer, data: Data):
-        # Dependencies injected via ContextVar
-        pass
-
-**With custom dependencies:**
-
-.. code:: python
-
-    def get_service():
-        return MyService()
-
-    @router.on("handler")
-    async def handler(
-        sid: SocketID, 
-        server: AsyncServer, 
-        data: Data,
-        service: MyService = Depends(get_service)
+    # Business logic is clean and focused
+    @sio.on("process_order")
+    async def process_order(
+        sid: SocketID,
+        server: AsyncServer,
+        order: OrderModel,           # Automatic validation
+        db=Depends(get_database),    # Infrastructure dependency
+        payment=Depends(get_payment_service),  # External service
+        config=Depends(get_config)   # Configuration
     ):
-        # Custom dependency injected
-        pass
+        # Pure business logic - no infrastructure concerns
+        if not config.allow_orders:
+            await server.emit("error", "Orders disabled", to=sid)
+            return
+        
+        # Process order with clean dependencies
+        result = await payment.charge(order.amount)
+        await db.save_order(order, result.transaction_id)
+        
+        await server.emit("order_processed", {
+            "order_id": order.id,
+            "transaction_id": result.transaction_id
+        }, to=sid)
 
 

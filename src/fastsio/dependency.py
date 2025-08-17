@@ -8,8 +8,7 @@ using Python's ContextVar for managing request-scoped dependencies.
 import asyncio
 import inspect
 from contextvars import ContextVar, copy_context
-from typing import Any, Callable, Dict, Optional, Type, TypeVar, Union, get_origin, get_args
-from functools import wraps
+from typing import Any, Callable, Dict, Optional, TypeVar
 
 from .types import SocketID, Environ, Auth, Reason, Data, Event
 
@@ -129,6 +128,32 @@ async def resolve_dependencies(func: Callable, **explicit_kwargs) -> Dict[str, A
             continue
         
         annotation = param.annotation
+        
+        # Handle Depends() dependencies first (before checking annotation)
+        if hasattr(param, 'default') and isinstance(param.default, Depends):
+            dep = param.default
+            cache_key = dep._cache_key
+            
+            # Check cache if enabled
+            if dep.use_cache and cache_key in dependency_cache:
+                resolved[param_name] = dependency_cache[cache_key]
+                continue
+            
+            # Resolve dependency
+            if asyncio.iscoroutinefunction(dep.dependency):
+                dep_resolved = await resolve_dependencies(dep.dependency)
+                result = await dep.dependency(**dep_resolved)
+            else:
+                dep_resolved = await resolve_dependencies(dep.dependency)
+                result = dep.dependency(**dep_resolved)
+            
+            # Cache result if enabled
+            if dep.use_cache:
+                dependency_cache[cache_key] = result
+            
+            resolved[param_name] = result
+            continue
+        
         if annotation == inspect.Parameter.empty:
             continue
         
@@ -203,30 +228,7 @@ async def resolve_dependencies(func: Callable, **explicit_kwargs) -> Dict[str, A
                 resolved[param_name] = server
             continue
         
-        # Handle Depends() dependencies
-        if hasattr(param, 'default') and isinstance(param.default, Depends):
-            dep = param.default
-            cache_key = dep._cache_key
-            
-            # Check cache if enabled
-            if dep.use_cache and cache_key in dependency_cache:
-                resolved[param_name] = dependency_cache[cache_key]
-                continue
-            
-            # Resolve dependency
-            if asyncio.iscoroutinefunction(dep.dependency):
-                dep_resolved = await resolve_dependencies(dep.dependency)
-                result = await dep.dependency(**dep_resolved)
-            else:
-                dep_resolved = await resolve_dependencies(dep.dependency)
-                result = dep.dependency(**dep_resolved)
-            
-            # Cache result if enabled
-            if dep.use_cache:
-                dependency_cache[cache_key] = result
-            
-            resolved[param_name] = result
-            continue
+
         
         # Handle Pydantic models
         try:
@@ -253,42 +255,7 @@ async def resolve_dependencies(func: Callable, **explicit_kwargs) -> Dict[str, A
     return resolved
 
 
-def inject_dependencies(func: Callable) -> Callable:
-    """
-    Decorator to automatically inject dependencies into a function.
-    
-    Usage:
-        @inject_dependencies
-        async def my_handler(sid: SocketID, data: Data):
-            pass
-    """
-    
-    @wraps(func)
-    async def async_wrapper(*args, **kwargs):
-        resolved = await resolve_dependencies(func, **kwargs)
-        resolved.update(kwargs)  # Explicit kwargs take precedence
-        return await func(**resolved)
-    
-    @wraps(func)
-    def sync_wrapper(*args, **kwargs):
-        # For sync functions, we need to run in async context
-        async def _resolve():
-            return await resolve_dependencies(func, **kwargs)
-        
-        try:
-            loop = asyncio.get_running_loop()
-            resolved = loop.run_until_complete(_resolve())
-        except RuntimeError:
-            # No running loop, create one
-            resolved = asyncio.run(_resolve())
-        
-        resolved.update(kwargs)  # Explicit kwargs take precedence
-        return func(**resolved)
-    
-    if asyncio.iscoroutinefunction(func):
-        return async_wrapper
-    else:
-        return sync_wrapper
+
 
 
 async def run_with_context(
@@ -308,7 +275,7 @@ async def run_with_context(
     This is the main entry point for executing handlers with DI.
     """
     
-    def _run_in_context():
+    if asyncio.iscoroutinefunction(func):
         with DependencyContext(
             socket_id=socket_id,
             environ=environ,
@@ -318,35 +285,13 @@ async def run_with_context(
             event=event,
             server=server,
         ):
-            if asyncio.iscoroutinefunction(func):
-                return func
-            else:
-                # For sync functions, resolve dependencies synchronously
-                resolved = {}
-                # Note: This is a simplified sync resolution - full async resolution
-                # would need to be done in the calling context
-                return lambda: func(**resolved, **kwargs)
-    
-    # Create a new context and run the function
-    ctx = copy_context()
-    
-    if asyncio.iscoroutinefunction(func):
-        async def _async_run():
-            with DependencyContext(
-                socket_id=socket_id,
-                environ=environ,
-                auth=auth,
-                reason=reason,
-                data=data,
-                event=event,
-                server=server,
-            ):
-                resolved = await resolve_dependencies(func, **kwargs)
-                resolved.update(kwargs)  # Explicit kwargs take precedence
-                return await func(**resolved)
-        
-        return await _async_run()
+            resolved = await resolve_dependencies(func, **kwargs)
+            resolved.update(kwargs)  # Explicit kwargs take precedence
+            return await func(**resolved)
     else:
+        # Create a new context and run the sync function
+        ctx = copy_context()
+        
         def _sync_run():
             with DependencyContext(
                 socket_id=socket_id,
@@ -357,8 +302,6 @@ async def run_with_context(
                 event=event,
                 server=server,
             ):
-                # For sync functions, we can't await resolve_dependencies
-                # So we use a simplified resolution
                 resolved = _resolve_sync_dependencies(func, **kwargs)
                 resolved.update(kwargs)
                 return func(**resolved)
@@ -384,6 +327,21 @@ def _resolve_sync_dependencies(func: Callable, **explicit_kwargs) -> Dict[str, A
             continue
         
         annotation = param.annotation
+        
+        # Handle Depends() dependencies first (before checking annotation)
+        if hasattr(param, 'default') and isinstance(param.default, Depends):
+            dep = param.default
+            
+            # For sync dependencies, resolve recursively
+            if not inspect.iscoroutinefunction(dep.dependency):
+                dep_resolved = _resolve_sync_dependencies(dep.dependency)
+                result = dep.dependency(**dep_resolved)
+                resolved[param_name] = result
+            else:
+                # Can't resolve async dependencies in sync context
+                raise ValueError(f"Cannot use async dependency {dep.dependency.__name__} in sync handler")
+            continue
+        
         if annotation == inspect.Parameter.empty:
             continue
         
@@ -448,19 +406,7 @@ def _resolve_sync_dependencies(func: Callable, **explicit_kwargs) -> Dict[str, A
                 resolved[param_name] = server
             continue
         
-        # Handle Depends() dependencies for sync functions
-        if hasattr(param, 'default') and isinstance(param.default, Depends):
-            dep = param.default
-            
-            # For sync dependencies, resolve recursively
-            if not inspect.iscoroutinefunction(dep.dependency):
-                dep_resolved = _resolve_sync_dependencies(dep.dependency)
-                result = dep.dependency(**dep_resolved)
-                resolved[param_name] = result
-            else:
-                # Can't resolve async dependencies in sync context
-                raise ValueError(f"Cannot use async dependency {dep.dependency.__name__} in sync handler")
-            continue
+
         
         # Handle Pydantic models
         try:
