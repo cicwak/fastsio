@@ -43,7 +43,7 @@ class BaseServer:
                 description=asyncapi_dict.get("description", None),
                 servers=dict(asyncapi_dict.get("servers", {}) or {}),
                 channel_prefix=str(asyncapi_dict.get("channel_prefix", "")),
-                spec_version=str(asyncapi_dict.get("spec_version", "3.0.0")),
+                ui_url=asyncapi_dict.get("ui_url", "/asyncapi"),
             )
         else:
             self.asyncapi_config = AsyncAPIConfig()

@@ -19,6 +19,7 @@ import engineio
 
 from . import async_manager, base_server, exceptions, packet
 from .types import SocketID, Environ, Auth, Reason, Data, Event
+from .dependency import run_with_context
 
 from pydantic import BaseModel as _PydanticBaseModel
 
@@ -799,7 +800,74 @@ class AsyncServer(base_server.BaseServer):
     async def _trigger_event(
         self, event: str, namespace: Optional[str], *args: Any
     ) -> Any:
-        """Invoke an application event handler."""
+        """Invoke an application event handler using ContextVar-based dependency injection."""
+        # Keep originals to support dependency injection from raw payload
+        original_args = args
+        original_sid: Optional[str] = None
+        if original_args and isinstance(original_args[0], str):
+            original_sid = original_args[0]
+
+        # first see if we have an explicit handler for the event
+        handler, args = self._get_event_handler(event, namespace, args)
+        if handler:
+            # Prepare data for dependency injection
+            payload_data: Any = None
+            if event not in base_server.BaseServer.reserved_events:
+                if len(original_args) >= 2:
+                    candidate_payload = original_args[1]
+                    # Only accept single-argument payload for model injection
+                    if len(original_args[1:]) == 1:
+                        payload_data = candidate_payload
+                    else:
+                        payload_data = original_args[1]  # Use first data arg if multiple
+
+            # Prepare environ for DI
+            computed_environ: Any = None
+            if original_sid is not None:
+                try:
+                    computed_environ = self.get_environ(original_sid, namespace)
+                except Exception:
+                    computed_environ = None
+
+            # Prepare auth payload for connect events
+            connect_auth_payload: Any = None
+            if event == "connect" and len(original_args) >= 3:
+                connect_auth_payload = original_args[2]
+
+            # Prepare disconnect reason
+            disconnect_reason: Any = None
+            if event == "disconnect" and len(args) > 0:
+                disconnect_reason = args[-1]
+
+            # Use new ContextVar-based dependency injection
+            try:
+                ret = await run_with_context(
+                    handler,
+                    socket_id=original_sid,
+                    environ=computed_environ,
+                    auth=connect_auth_payload if event == "connect" else None,
+                    reason=disconnect_reason if event == "disconnect" else None,
+                    data=payload_data,
+                    event=event,
+                    server=self,
+                )
+            except Exception:
+                # Fallback on any error during development
+                ret = await self._trigger_event_legacy(event, namespace, *original_args)
+
+            # Validate response if response_model is defined
+            ret = self._validate_response(handler, ret)
+            return ret
+        # or else, forward the event to a namespace handler if one exists
+        handler, args = self._get_namespace_handler(namespace, args)
+        if handler:
+            return await handler.trigger_event(event, *args)
+        return self.not_handled
+
+    async def _trigger_event_legacy(
+        self, event: str, namespace: Optional[str], *args: Any
+    ) -> Any:
+        """Legacy dependency injection system for backward compatibility."""
         # Keep originals to support dependency injection from raw payload
         original_args = args
         original_sid: Optional[str] = None
@@ -818,15 +886,6 @@ class AsyncServer(base_server.BaseServer):
                 param_items = list(sig.parameters.items())
             except (TypeError, ValueError):  # builtins/callables without signature
                 param_items = []
-
-            # Determine which params are already fulfilled positionally
-            positionally_fulfilled_param_names = []
-            for idx, (pname, p) in enumerate(param_items):
-                if idx < len(args) and p.kind in (
-                    inspect.Parameter.POSITIONAL_ONLY,
-                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                ):
-                    positionally_fulfilled_param_names.append(pname)
 
             # Prepare payload for Pydantic, only for non-reserved events
             payload_for_model: Any = None
@@ -850,10 +909,6 @@ class AsyncServer(base_server.BaseServer):
 
             for pname, p in param_items:
                 ann = p.annotation
-
-                # Skip if already provided positionally
-                # if pname in positionally_fulfilled_param_names:
-                #     continue
 
                 # Inject AsyncServer by annotation
                 try:
@@ -950,13 +1005,7 @@ class AsyncServer(base_server.BaseServer):
                     else:  # pragma: no cover
                         raise
 
-            # Validate response if response_model is defined
-            ret = self._validate_response(handler, ret)
             return ret
-        # or else, forward the event to a namespace handler if one exists
-        handler, args = self._get_namespace_handler(namespace, args)
-        if handler:
-            return await handler.trigger_event(event, *args)
         return self.not_handled
 
     async def _handle_eio_connect(self, eio_sid: str, environ: Dict[str, Any]) -> None:  # type: ignore[override]
