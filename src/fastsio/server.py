@@ -1,6 +1,6 @@
 import inspect
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 import engineio
 
@@ -712,7 +712,9 @@ class Server(base_server.BaseServer):
                     if len(original_args[1:]) == 1:
                         payload_data = candidate_payload
                     else:
-                        payload_data = original_args[1]  # Use first data arg if multiple
+                        payload_data = original_args[
+                            1
+                        ]  # Use first data arg if multiple
 
             # Prepare environ for DI
             computed_environ: Any = None
@@ -733,7 +735,10 @@ class Server(base_server.BaseServer):
                 disconnect_reason = args[-1]
 
             # Execute middleware chain if middlewares are registered
-            if hasattr(self, '_middleware_chain') and self._middleware_chain.middlewares:
+            if (
+                hasattr(self, "_middleware_chain")
+                and self._middleware_chain.middlewares
+            ):
                 # Use middleware chain for execution
                 ret = self._middleware_chain.execute(
                     event=event,
@@ -753,23 +758,32 @@ class Server(base_server.BaseServer):
                 if inspect.iscoroutinefunction(handler):
                     # This shouldn't happen in sync server, but just in case
                     import asyncio
+
                     try:
                         loop = asyncio.get_running_loop()
                         # We can't await in sync context, so this is an error
-                        raise RuntimeError("Async handler in sync server - use AsyncServer instead")
+                        raise RuntimeError(
+                            "Async handler in sync server - use AsyncServer instead"
+                        )
                     except RuntimeError as e:
                         if "no running event loop" in str(e):
                             # No loop, create one for this call
-                            ret = asyncio.run(run_with_context(
-                                handler,
-                                socket_id=original_sid,
-                                environ=computed_environ,
-                                auth=connect_auth_payload if event == "connect" else None,
-                                reason=disconnect_reason if event == "disconnect" else None,
-                                data=payload_data,
-                                event=event,
-                                server=self,
-                            ))
+                            ret = asyncio.run(
+                                run_with_context(
+                                    handler,
+                                    socket_id=original_sid,
+                                    environ=computed_environ,
+                                    auth=connect_auth_payload
+                                    if event == "connect"
+                                    else None,
+                                    reason=disconnect_reason
+                                    if event == "disconnect"
+                                    else None,
+                                    data=payload_data,
+                                    event=event,
+                                    server=self,
+                                )
+                            )
                         else:
                             raise
                 else:
@@ -804,15 +818,13 @@ class Server(base_server.BaseServer):
         data: Any = None,
         event: Optional[str] = None,
         server: Any = None,
-        **kwargs
+        **kwargs,
     ) -> Any:
-        """
-        Run a synchronous function with dependency injection context.
+        """Run a synchronous function with dependency injection context.
 
         This is a simplified version for sync handlers that uses
         sync dependency resolution.
         """
-
         with DependencyContext(
             socket_id=socket_id,
             environ=environ,
@@ -824,8 +836,6 @@ class Server(base_server.BaseServer):
         ):
             resolved = _resolve_sync_dependencies(func, **kwargs)
             return func(**resolved)
-
-
 
     def _handle_eio_connect(self, eio_sid, environ):
         """Handle the Engine.IO connection event."""

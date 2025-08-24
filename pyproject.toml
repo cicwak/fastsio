@@ -65,6 +65,9 @@ line-length = 88
 exclude = [
     "migrations",
     "venv",
+    "tests",
+    "examples",
+    "docs",
 ]
 
 

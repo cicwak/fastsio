@@ -73,6 +73,7 @@ def with_instrumented_server(auth=False, **ikwargs):
 def _custom_auth(auth):
     return auth == {"foo": "bar"}
 
+
 @pytest.mark.skip(reason="Temporarily disabled, otherwise tests is blocked")
 class TestAdmin:
     def setup_method(self):

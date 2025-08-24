@@ -6,6 +6,7 @@ import pytest
 from fastsio import AsyncSimpleClient
 from fastsio.exceptions import DisconnectedError, SocketIOError, TimeoutError
 
+
 @pytest.mark.skip(reason="Temporarily disabled, for CI test")
 class TestAsyncAsyncSimpleClient:
     async def test_constructor(self):

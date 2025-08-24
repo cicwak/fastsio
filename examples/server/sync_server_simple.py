@@ -21,7 +21,7 @@ def get_config():
 class MessageService:
     def __init__(self):
         self.message_count = 0
-    
+
     def process_message(self, message: str) -> str:
         self.message_count += 1
         return f"[{self.message_count}] Processed: {message}"
@@ -39,19 +39,12 @@ class ChatMessage(BaseModel):
 
 # Создаем сервер с AsyncAPI
 sio = Server(
-    asyncapi={
-        "enabled": True,
-        "title": "Simple Sync Chat",
-        "version": "1.0.0"
-    }
+    asyncapi={"enabled": True, "title": "Simple Sync Chat", "version": "1.0.0"}
 )
 
 
 @sio.event
-def connect(
-    sid: SocketID,
-    config: Config = Depends(get_config)
-):
+def connect(sid: SocketID, config: Config = Depends(get_config)):
     """Подключение с dependency injection."""
     print(f"Connected to {config.app_name} v{config.version}: {sid}")
     return True
@@ -69,12 +62,12 @@ def test_message(
     data: Data,
     server: Server,
     config: Config = Depends(get_config),
-    service: MessageService = Depends(get_message_service)
+    service: MessageService = Depends(get_message_service),
 ):
     """Тестовое сообщение с множественными зависимостями."""
     print(f"Config: {config.app_name}")
     print(f"Raw data: {data}")
-    
+
     if isinstance(data, dict) and "message" in data:
         processed = service.process_message(data["message"])
         server.emit("response", {"processed": processed}, to=sid)
@@ -87,16 +80,16 @@ def chat_message(
     sid: SocketID,
     message: ChatMessage,
     server: Server,
-    service: MessageService = Depends(get_message_service)
+    service: MessageService = Depends(get_message_service),
 ):
     """Чат с Pydantic валидацией и DI."""
     processed = service.process_message(message.text)
-    
-    server.emit("chat_response", {
-        "room": message.room,
-        "original": message.text,
-        "processed": processed
-    }, to=sid)
+
+    server.emit(
+        "chat_response",
+        {"room": message.room, "original": message.text, "processed": processed},
+        to=sid,
+    )
 
 
 if __name__ == "__main__":
