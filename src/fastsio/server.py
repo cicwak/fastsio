@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional, Tuple
 import engineio
 
 from . import base_server, exceptions, packet
-from .types import SocketID, Environ, Auth, Reason, Data, Event
+from .dependency import DependencyContext, _resolve_sync_dependencies
 
 default_logger = logging.getLogger("fastsio.server")
 
@@ -798,7 +798,6 @@ class Server(base_server.BaseServer):
         This is a simplified version for sync handlers that uses
         sync dependency resolution.
         """
-        from .dependency import DependencyContext, _resolve_sync_dependencies
         
         with DependencyContext(
             socket_id=socket_id,
