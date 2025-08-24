@@ -16,7 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-      - run: python -m pip install --upgrade pip wheel pytest pytest-cov
+      - run: python -m pip install --upgrade pip wheel
+      - run: python -m pip install pytest pytest-cov pytest-asyncio pytest-timeout
+      - run: python -m pip install simple-websocket uvicorn requests websocket-client aiohttp msgpack
+      - run: python -m pip install -e .
+      - run: pytest -p no:logging --timeout=60 --cov=fastsio --cov-branch
 
 
   coverage:
