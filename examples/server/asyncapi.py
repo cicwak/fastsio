@@ -29,10 +29,10 @@ async def message__send(sid: SocketID, sio: AsyncServer, data: DataMessage):
 async def message__edit(sid: SocketID, sio: AsyncServer, data: DataMessage):
     pass
 
+
 sio = fastsio.AsyncServer(
     async_mode="asgi",
     cors_allowed_origins="*",
-
     # its default settings for config
     # asyncapi=AsyncAPIConfig(
     #     enabled=True,

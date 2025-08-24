@@ -1,8 +1,8 @@
-import engineio
-
 # pyright: reportMissingImports=false, reportUnknownMemberType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportUnknownParameterType=false
 import json
 from typing import Any
+
+import engineio
 
 try:  # pragma: no cover - optional dependency
     import yaml  # type: ignore
@@ -15,7 +15,8 @@ except Exception:  # pragma: no cover
     TYPE_CHECKING = False  # type: ignore
 
 if TYPE_CHECKING:  # pragma: no cover - typing shim for engineio.ASGIApp
-    from typing import Awaitable, Callable
+    from collections.abc import Awaitable
+    from typing import Callable
 
     class _BaseASGIApp:  # minimal protocol
         async def __call__(
@@ -109,21 +110,21 @@ class ASGIApp(_BaseASGIApp):  # pragma: no cover
                     }
                 )
                 await send({"type": "http.response.body", "body": b""})
-                return
+                return None
             # UI page
             if getattr(cfg, "ui_url", None):
                 if path == cfg.ui_url:
                     await self._send_asyncapi_ui(scope, receive, send)
-                    return
+                    return None
             if path == cfg.url:
                 await self._send_asyncapi_json(scope, receive, send)
-                return
+                return None
             if getattr(cfg, "expose_yaml", True) and (
                 path == cfg.url.replace(".json", ".yaml")
                 or path == cfg.url.replace(".json", ".yml")
             ):
                 await self._send_asyncapi_yaml(scope, receive, send)
-                return
+                return None
         # Fallback to Engine.IO default handling
         return await super().__call__(scope, receive, send)
 

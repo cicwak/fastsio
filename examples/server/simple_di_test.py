@@ -23,7 +23,7 @@ def get_config():
 class MessageService:
     def __init__(self):
         self.message_count = 0
-    
+
     def process_message(self, message: str) -> str:
         self.message_count += 1
         return f"[{self.message_count}] Processed: {message}"
@@ -44,10 +44,7 @@ sio = AsyncServer()
 
 
 @sio.event
-async def connect(
-    sid: SocketID,
-    config: Config = Depends(get_config)
-):
+async def connect(sid: SocketID, config: Config = Depends(get_config)):
     """Test connect with dependency injection."""
     print(f"Connected to {config.app_name} v{config.version}: {sid}")
     return True
@@ -65,13 +62,13 @@ async def test_message(
     event: Event,
     data: Data,
     config: Config = Depends(get_config),
-    service: MessageService = Depends(get_message_service)
+    service: MessageService = Depends(get_message_service),
 ):
     """Test message handler with multiple dependencies."""
     print(f"Event: {event}, SID: {sid}")
     print(f"Config: {config.app_name}")
     print(f"Raw data: {data}")
-    
+
     if isinstance(data, dict) and "message" in data:
         processed = service.process_message(data["message"])
         await sio.emit("response", {"processed": processed}, to=sid)
@@ -83,16 +80,16 @@ async def test_message(
 async def chat_message(
     sid: SocketID,
     message: ChatMessage,
-    service: MessageService = Depends(get_message_service)
+    service: MessageService = Depends(get_message_service),
 ):
     """Test Pydantic model validation with DI."""
     processed = service.process_message(message.text)
-    
-    await sio.emit("chat_response", {
-        "room": message.room,
-        "original": message.text,
-        "processed": processed
-    }, to=sid)
+
+    await sio.emit(
+        "chat_response",
+        {"room": message.room, "original": message.text, "processed": processed},
+        to=sid,
+    )
 
 
 if __name__ == "__main__":

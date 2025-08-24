@@ -185,7 +185,7 @@ class TestAsyncManager:
         assert "bar" not in self.bm.rooms["/foo"]
 
     async def test_close_invalid_room(self):
-        self.bm.close_room("bar", "/foo")
+        await self.bm.close_room("bar", "/foo")
 
     async def test_rooms(self):
         sid = await self.bm.connect("123", "/foo")

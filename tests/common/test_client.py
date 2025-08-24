@@ -1051,7 +1051,7 @@ class TestClient:
         ]
         assert c._reconnect_task is None
 
-    @mock.patch("socketio.client.random.random", side_effect=[1, 0, 0.5])
+    @mock.patch("fastsio.client.random.random", side_effect=[1, 0, 0.5])
     def test_handle_reconnect_max_delay(self, random):
         c = client.Client(reconnection_delay_max=3)
         c._reconnect_task = "foo"
@@ -1069,7 +1069,7 @@ class TestClient:
         ]
         assert c._reconnect_task is None
 
-    @mock.patch("socketio.client.random.random", side_effect=[1, 0, 0.5])
+    @mock.patch("fastsio.client.random.random", side_effect=[1, 0, 0.5])
     def test_handle_reconnect_max_attempts(self, random):
         c = client.Client(reconnection_attempts=2)
         c.connection_namespaces = ["/"]
@@ -1089,7 +1089,7 @@ class TestClient:
         assert c._reconnect_task == "foo"
         c._trigger_event.assert_called_once_with("__disconnect_final", namespace="/")
 
-    @mock.patch("socketio.client.random.random", side_effect=[1, 0, 0.5])
+    @mock.patch("fastsio.client.random.random", side_effect=[1, 0, 0.5])
     def test_handle_reconnect_aborted(self, random):
         c = client.Client()
         c.connection_namespaces = ["/"]
@@ -1144,7 +1144,7 @@ class TestClient:
             c._send_packet.call_args_list[1][0][0].encode() == expected_packet.encode()
         )
 
-    @mock.patch("socketio.client.random.random", side_effect=[1, 0, 0.5])
+    @mock.patch("fastsio.client.random.random", side_effect=[1, 0, 0.5])
     def test_shutdown_reconnect(self, random):
         c = client.Client()
         c.connection_namespaces = ["/"]

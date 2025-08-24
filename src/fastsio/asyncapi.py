@@ -235,9 +235,8 @@ class AsyncAPIGenerator:
             # If response_model is a dictionary, return None since we handle it separately
             if isinstance(resp_model, dict):
                 return None
-            else:
-                # Single response model (existing behavior)
-                return self._to_schema(resp_model)
+            # Single response model (existing behavior)
+            return self._to_schema(resp_model)
 
         try:
             sig = inspect.signature(handler)  # type: ignore[arg-type]
@@ -252,7 +251,14 @@ class AsyncAPIGenerator:
         # Import locally to avoid cycles
         try:
             from .async_server import AsyncServer as _AsyncServerType  # type: ignore
-            from .types import SocketID, Environ, Auth, Reason, Data, Event  # type: ignore
+            from .types import (  # type: ignore
+                Auth,
+                Data,
+                Environ,
+                Event,
+                Reason,
+                SocketID,
+            )
         except Exception:  # pragma: no cover
             _AsyncServerType = object  # type: ignore
             SocketID = object  # type: ignore
@@ -295,7 +301,7 @@ class AsyncAPIGenerator:
             variants: List[Any] = list(args)
             schemas: List[Dict[str, Any]] = []
             for v in variants:
-                if v is type(None):  # noqa: E721
+                if v is type(None):
                     schemas.append({"type": "null"})
                 else:
                     schemas.append(self._to_schema(v))
