@@ -1,0 +1,1533 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.5, pytest-8.4.1, pluggy-1.6.0 -- /Users/kostya/Library/Caches/pypoetry/virtualenvs/fastsio-LhtYp3o7-py3.12/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/kostya/projects/other/fast-socketio
+configfile: pyproject.toml
+plugins: asyncio-1.1.0
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 357 items
+tests/common/test_admin.py::TestAdmin::test_missing_auth SKIPPED (Te...) [  0%]
+tests/common/test_admin.py::TestAdmin::test_admin_connect_with_no_auth SKIPPED [  0%]
+tests/common/test_admin.py::TestAdmin::test_admin_connect_with_dict_auth SKIPPED [  0%]
+tests/common/test_admin.py::TestAdmin::test_admin_connect_with_list_auth SKIPPED [  1%]
+tests/common/test_admin.py::TestAdmin::test_admin_connect_with_function_auth SKIPPED [  1%]
+tests/common/test_admin.py::TestAdmin::test_admin_connect_only_admin SKIPPED [  1%]
+tests/common/test_admin.py::TestAdmin::test_admin_connect_with_others SKIPPED [  1%]
+tests/common/test_admin.py::TestAdmin::test_admin_connect_production SKIPPED [  2%]
+tests/common/test_admin.py::TestAdmin::test_admin_features SKIPPED (...) [  2%]
+tests/common/test_client.py::TestClient::test_is_asyncio_based PASSED    [  2%]
+tests/common/test_client.py::TestClient::test_create PASSED              [  3%]
+tests/common/test_client.py::TestClient::test_msgpack PASSED             [  3%]
+tests/common/test_client.py::TestClient::test_custom_serializer PASSED   [  3%]
+tests/common/test_client.py::TestClient::test_custom_json PASSED         [  3%]
+tests/common/test_client.py::TestClient::test_logger PASSED              [  4%]
+tests/common/test_client.py::TestClient::test_engineio_logger PASSED     [  4%]
+tests/common/test_client.py::TestClient::test_on_event PASSED            [  4%]
+tests/common/test_client.py::TestClient::test_event PASSED               [  5%]
+tests/common/test_client.py::TestClient::test_namespace_handler PASSED   [  5%]
+tests/common/test_client.py::TestClient::test_namespace_handler_wrong_class PASSED [  5%]
+tests/common/test_client.py::TestClient::test_namespace_handler_wrong_async PASSED [  5%]
+tests/common/test_client.py::TestClient::test_connect PASSED             [  6%]
+tests/common/test_client.py::TestClient::test_connect_functions PASSED   [  6%]
+tests/common/test_client.py::TestClient::test_connect_one_namespace PASSED [  6%]
+tests/common/test_client.py::TestClient::test_connect_default_namespaces PASSED [  7%]
+tests/common/test_client.py::TestClient::test_connect_no_namespaces PASSED [  7%]
+tests/common/test_client.py::TestClient::test_connect_error PASSED       [  7%]
+tests/common/test_client.py::TestClient::test_connect_twice PASSED       [  7%]
+tests/common/test_client.py::TestClient::test_connect_wait_single_namespace PASSED [  8%]
+tests/common/test_client.py::TestClient::test_connect_wait_two_namespaces PASSED [  8%]
+tests/common/test_client.py::TestClient::test_connect_timeout PASSED     [  8%]
+tests/common/test_client.py::TestClient::test_wait_no_reconnect PASSED   [  8%]
+tests/common/test_client.py::TestClient::test_wait_reconnect_failed PASSED [  9%]
+tests/common/test_client.py::TestClient::test_wait_reconnect_successful PASSED [  9%]
+tests/common/test_client.py::TestClient::test_get_sid PASSED             [  9%]
+tests/common/test_client.py::TestClient::test_emit_no_arguments PASSED   [ 10%]
+tests/common/test_client.py::TestClient::test_emit_one_argument PASSED   [ 10%]
+tests/common/test_client.py::TestClient::test_emit_one_argument_list PASSED [ 10%]
+tests/common/test_client.py::TestClient::test_emit_two_arguments PASSED  [ 10%]
+tests/common/test_client.py::TestClient::test_emit_namespace PASSED      [ 11%]
+tests/common/test_client.py::TestClient::test_emit_unknown_namespace PASSED [ 11%]
+tests/common/test_client.py::TestClient::test_emit_with_callback PASSED  [ 11%]
+tests/common/test_client.py::TestClient::test_emit_namespace_with_callback PASSED [ 12%]
+tests/common/test_client.py::TestClient::test_emit_binary PASSED         [ 12%]
+tests/common/test_client.py::TestClient::test_emit_not_binary PASSED     [ 12%]
+tests/common/test_client.py::TestClient::test_send PASSED                [ 12%]
+tests/common/test_client.py::TestClient::test_send_with_defaults PASSED  [ 13%]
+tests/common/test_client.py::TestClient::test_call PASSED                [ 13%]
+tests/common/test_client.py::TestClient::test_call_with_timeout PASSED   [ 13%]
+tests/common/test_client.py::TestClient::test_disconnect PASSED          [ 14%]
+tests/common/test_client.py::TestClient::test_disconnect_namespaces PASSED [ 14%]
+tests/common/test_client.py::TestClient::test_transport PASSED           [ 14%]
+tests/common/test_client.py::TestClient::test_start_background_task PASSED [ 14%]
+tests/common/test_client.py::TestClient::test_sleep PASSED               [ 15%]
+tests/common/test_client.py::TestClient::test_send_packet PASSED         [ 15%]
+tests/common/test_client.py::TestClient::test_send_packet_binary PASSED  [ 15%]
+tests/common/test_client.py::TestClient::test_send_packet_default_binary PASSED [ 15%]
+tests/common/test_client.py::TestClient::test_generate_ack_id PASSED     [ 16%]
+tests/common/test_client.py::TestClient::test_handle_connect PASSED      [ 16%]
+tests/common/test_client.py::TestClient::test_handle_connect_with_namespaces PASSED [ 16%]
+tests/common/test_client.py::TestClient::test_handle_connect_namespace PASSED [ 17%]
+tests/common/test_client.py::TestClient::test_handle_disconnect PASSED   [ 17%]
+tests/common/test_client.py::TestClient::test_handle_disconnect_namespace PASSED [ 17%]
+tests/common/test_client.py::TestClient::test_handle_disconnect_unknown_namespace PASSED [ 17%]
+tests/common/test_client.py::TestClient::test_handle_disconnect_default_namespace PASSED [ 18%]
+tests/common/test_client.py::TestClient::test_handle_event PASSED        [ 18%]
+tests/common/test_client.py::TestClient::test_handle_event_with_id_no_arguments PASSED [ 18%]
+tests/common/test_client.py::TestClient::test_handle_event_with_id_one_argument PASSED [ 19%]
+tests/common/test_client.py::TestClient::test_handle_event_with_id_one_list_argument PASSED [ 19%]
+tests/common/test_client.py::TestClient::test_handle_event_with_id_two_arguments PASSED [ 19%]
+tests/common/test_client.py::TestClient::test_handle_ack PASSED          [ 19%]
+tests/common/test_client.py::TestClient::test_handle_ack_not_found PASSED [ 20%]
+tests/common/test_client.py::TestClient::test_handle_error PASSED        [ 20%]
+tests/common/test_client.py::TestClient::test_handle_error_with_no_arguments PASSED [ 20%]
+tests/common/test_client.py::TestClient::test_handle_error_namespace PASSED [ 21%]
+tests/common/test_client.py::TestClient::test_handle_error_namespace_with_no_arguments PASSED [ 21%]
+tests/common/test_client.py::TestClient::test_handle_error_unknown_namespace PASSED [ 21%]
+tests/common/test_client.py::TestClient::test_trigger_event PASSED       [ 21%]
+tests/common/test_client.py::TestClient::test_trigger_event_namespace PASSED [ 22%]
+tests/common/test_client.py::TestClient::test_trigger_event_with_catchall_namespace PASSED [ 22%]
+tests/common/test_client.py::TestClient::test_trigger_event_with_catchall_namespace_handler PASSED [ 22%]
+tests/common/test_client.py::TestClient::test_trigger_event_class_namespace PASSED [ 22%]
+tests/common/test_client.py::TestClient::test_trigger_event_unknown_namespace PASSED [ 23%]
+tests/common/test_client.py::TestClient::test_handle_reconnect PASSED    [ 23%]
+tests/common/test_client.py::TestClient::test_handle_reconnect_max_delay PASSED [ 23%]
+tests/common/test_client.py::TestClient::test_handle_reconnect_max_attempts PASSED [ 24%]
+tests/common/test_client.py::TestClient::test_handle_reconnect_aborted PASSED [ 24%]
+tests/common/test_client.py::TestClient::test_shutdown_disconnect PASSED [ 24%]
+tests/common/test_client.py::TestClient::test_shutdown_disconnect_namespaces PASSED [ 24%]
+tests/common/test_client.py::TestClient::test_shutdown_reconnect PASSED  [ 25%]
+tests/common/test_client.py::TestClient::test_handle_eio_connect PASSED  [ 25%]
+tests/common/test_client.py::TestClient::test_handle_eio_connect_function PASSED [ 25%]
+tests/common/test_client.py::TestClient::test_handle_eio_message PASSED  [ 26%]
+tests/common/test_client.py::TestClient::test_eio_disconnect PASSED      [ 26%]
+tests/common/test_client.py::TestClient::test_eio_disconnect_namespaces PASSED [ 26%]
+tests/common/test_client.py::TestClient::test_eio_disconnect_reconnect PASSED [ 26%]
+tests/common/test_client.py::TestClient::test_eio_disconnect_self_disconnect PASSED [ 27%]
+tests/common/test_client.py::TestClient::test_eio_disconnect_no_reconnect PASSED [ 27%]
+tests/common/test_manager.py::TestBaseManager::test_connect PASSED       [ 27%]
+tests/common/test_manager.py::TestBaseManager::test_pre_disconnect PASSED [ 28%]
+tests/common/test_manager.py::TestBaseManager::test_disconnect PASSED    [ 28%]
+tests/common/test_manager.py::TestBaseManager::test_disconnect_default_namespace PASSED [ 28%]
+tests/common/test_manager.py::TestBaseManager::test_disconnect_twice PASSED [ 28%]
+tests/common/test_manager.py::TestBaseManager::test_disconnect_all PASSED [ 29%]
+tests/common/test_manager.py::TestBaseManager::test_disconnect_with_callbacks PASSED [ 29%]
+tests/common/test_manager.py::TestBaseManager::test_disconnect_bad_namespace PASSED [ 29%]
+tests/common/test_manager.py::TestBaseManager::test_enter_room_bad_namespace PASSED [ 29%]
+tests/common/test_manager.py::TestBaseManager::test_trigger_callback PASSED [ 30%]
+tests/common/test_manager.py::TestBaseManager::test_invalid_callback PASSED [ 30%]
+tests/common/test_manager.py::TestBaseManager::test_get_namespaces PASSED [ 30%]
+tests/common/test_manager.py::TestBaseManager::test_get_participants PASSED [ 31%]
+tests/common/test_manager.py::TestBaseManager::test_leave_invalid_room PASSED [ 31%]
+tests/common/test_manager.py::TestBaseManager::test_no_room PASSED       [ 31%]
+tests/common/test_manager.py::TestBaseManager::test_close_room PASSED    [ 31%]
+tests/common/test_manager.py::TestBaseManager::test_close_invalid_room PASSED [ 32%]
+tests/common/test_manager.py::TestBaseManager::test_rooms PASSED         [ 32%]
+tests/common/test_manager.py::TestBaseManager::test_emit_to_sid PASSED   [ 32%]
+tests/common/test_manager.py::TestBaseManager::test_emit_to_room PASSED  [ 33%]
+tests/common/test_manager.py::TestBaseManager::test_emit_to_rooms PASSED [ 33%]
+tests/common/test_manager.py::TestBaseManager::test_emit_to_all PASSED   [ 33%]
+tests/common/test_manager.py::TestBaseManager::test_emit_to_all_skip_one PASSED [ 33%]
+tests/common/test_manager.py::TestBaseManager::test_emit_to_all_skip_two PASSED [ 34%]
+tests/common/test_manager.py::TestBaseManager::test_emit_with_callback PASSED [ 34%]
+tests/common/test_manager.py::TestBaseManager::test_emit_to_invalid_room PASSED [ 34%]
+tests/common/test_manager.py::TestBaseManager::test_emit_to_invalid_namespace PASSED [ 35%]
+tests/common/test_manager.py::TestBaseManager::test_emit_with_tuple PASSED [ 35%]
+tests/common/test_manager.py::TestBaseManager::test_emit_with_list PASSED [ 35%]
+tests/common/test_manager.py::TestBaseManager::test_emit_with_none PASSED [ 35%]
+tests/common/test_manager.py::TestBaseManager::test_emit_binary PASSED   [ 36%]
+tests/common/test_middleware.py::TestMiddleware::test_wsgi_routing PASSED [ 36%]
+tests/common/test_middleware.py::TestMiddleware::test_sio_routing PASSED [ 36%]
+tests/common/test_middleware.py::TestMiddleware::test_404 PASSED         [ 36%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_init_defaults PASSED [ 37%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_init_with_events_string PASSED [ 37%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_init_with_events_list PASSED [ 37%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_init_with_namespace PASSED [ 38%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_init_with_global PASSED [ 38%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_should_run_global PASSED [ 38%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_should_run_namespace_filter PASSED [ 38%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_should_run_event_filter PASSED [ 39%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_should_run_combined_filters PASSED [ 39%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_before_event_default PASSED [ 39%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_after_event_default PASSED [ 40%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_call_default_implementation PASSED [ 40%]
+tests/common/test_middlewares.py::TestBaseMiddleware::test_handle_exception_default PASSED [ 40%]
+tests/common/test_middlewares.py::TestSyncMiddleware::test_before_event_sync PASSED [ 40%]
+tests/common/test_middlewares.py::TestSyncMiddleware::test_after_event_sync PASSED [ 41%]
+tests/common/test_middlewares.py::TestSyncMiddleware::test_call_sync_implementation PASSED [ 41%]
+tests/common/test_middlewares.py::TestSyncMiddleware::test_handle_exception_sync PASSED [ 41%]
+tests/common/test_middlewares.py::TestMiddlewareChain::test_init PASSED  [ 42%]
+tests/common/test_middlewares.py::TestMiddlewareChain::test_add_middleware PASSED [ 42%]
+tests/common/test_middlewares.py::TestMiddlewareChain::test_remove_middleware PASSED [ 42%]
+tests/common/test_middlewares.py::TestMiddlewareChain::test_remove_nonexistent_middleware PASSED [ 42%]
+tests/common/test_middlewares.py::TestMiddlewareChain::test_execute_no_middlewares PASSED [ 43%]
+tests/common/test_middlewares.py::TestMiddlewareChain::test_execute_with_middleware PASSED [ 43%]
+tests/common/test_middlewares.py::TestMiddlewareChain::test_execute_middleware_filtering PASSED [ 43%]
+tests/common/test_middlewares.py::TestConvenienceMiddlewares::test_auth_middleware PASSED [ 43%]
+tests/common/test_middlewares.py::TestConvenienceMiddlewares::test_logging_middleware PASSED [ 44%]
+tests/common/test_middlewares.py::TestConvenienceMiddlewares::test_rate_limit_middleware PASSED [ 44%]
+tests/common/test_middlewares.py::TestMiddlewareIntegration::test_middleware_with_sync_handler PASSED [ 44%]
+tests/common/test_middlewares.py::TestMiddlewareIntegration::test_middleware_with_async_handler PASSED [ 45%]
+tests/common/test_msgpack_packet.py::TestMsgPackPacket::test_encode_decode PASSED [ 45%]
+tests/common/test_msgpack_packet.py::TestMsgPackPacket::test_encode_decode_with_id PASSED [ 45%]
+tests/common/test_msgpack_packet.py::TestMsgPackPacket::test_encode_binary_event_packet PASSED [ 45%]
+tests/common/test_msgpack_packet.py::TestMsgPackPacket::test_encode_binary_ack_packet PASSED [ 46%]
+tests/common/test_namespace.py::TestNamespace::test_connect_event PASSED [ 46%]
+tests/common/test_namespace.py::TestNamespace::test_disconnect_event PASSED [ 46%]
+tests/common/test_namespace.py::TestNamespace::test_legacy_disconnect_event PASSED [ 47%]
+tests/common/test_namespace.py::TestNamespace::test_event PASSED         [ 47%]
+tests/common/test_namespace.py::TestNamespace::test_event_not_found PASSED [ 47%]
+tests/common/test_namespace.py::TestNamespace::test_emit PASSED          [ 47%]
+tests/common/test_namespace.py::TestNamespace::test_send PASSED          [ 48%]
+tests/common/test_namespace.py::TestNamespace::test_call PASSED          [ 48%]
+tests/common/test_namespace.py::TestNamespace::test_enter_room PASSED    [ 48%]
+tests/common/test_namespace.py::TestNamespace::test_leave_room PASSED    [ 49%]
+tests/common/test_namespace.py::TestNamespace::test_close_room PASSED    [ 49%]
+tests/common/test_namespace.py::TestNamespace::test_rooms PASSED         [ 49%]
+tests/common/test_namespace.py::TestNamespace::test_session PASSED       [ 49%]
+tests/common/test_namespace.py::TestNamespace::test_disconnect PASSED    [ 50%]
+tests/common/test_namespace.py::TestNamespace::test_disconnect_event_client PASSED [ 50%]
+tests/common/test_namespace.py::TestNamespace::test_legacy_disconnect_event_client PASSED [ 50%]
+tests/common/test_namespace.py::TestNamespace::test_event_not_found_client PASSED [ 50%]
+tests/common/test_namespace.py::TestNamespace::test_emit_client PASSED   [ 51%]
+tests/common/test_namespace.py::TestNamespace::test_send_client PASSED   [ 51%]
+tests/common/test_namespace.py::TestNamespace::test_call_client PASSED   [ 51%]
+tests/common/test_namespace.py::TestNamespace::test_disconnect_client PASSED [ 52%]
+tests/common/test_packet.py::TestPacket::test_encode_default_packet PASSED [ 52%]
+tests/common/test_packet.py::TestPacket::test_decode_default_packet PASSED [ 52%]
+tests/common/test_packet.py::TestPacket::test_encode_text_event_packet PASSED [ 52%]
+tests/common/test_packet.py::TestPacket::test_decode_text_event_packet PASSED [ 53%]
+tests/common/test_packet.py::TestPacket::test_decode_empty_event_packet PASSED [ 53%]
+tests/common/test_packet.py::TestPacket::test_encode_binary_event_packet PASSED [ 53%]
+tests/common/test_packet.py::TestPacket::test_decode_binary_event_packet PASSED [ 54%]
+tests/common/test_packet.py::TestPacket::test_encode_text_ack_packet PASSED [ 54%]
+tests/common/test_packet.py::TestPacket::test_decode_text_ack_packet PASSED [ 54%]
+tests/common/test_packet.py::TestPacket::test_encode_binary_ack_packet PASSED [ 54%]
+tests/common/test_packet.py::TestPacket::test_decode_binary_ack_packet PASSED [ 55%]
+tests/common/test_packet.py::TestPacket::test_invalid_binary_packet PASSED [ 55%]
+tests/common/test_packet.py::TestPacket::test_encode_namespace PASSED    [ 55%]
+tests/common/test_packet.py::TestPacket::test_decode_namespace PASSED    [ 56%]
+tests/common/test_packet.py::TestPacket::test_decode_namespace_with_query_string PASSED [ 56%]
+tests/common/test_packet.py::TestPacket::test_encode_namespace_no_data PASSED [ 56%]
+tests/common/test_packet.py::TestPacket::test_decode_namespace_no_data PASSED [ 56%]
+tests/common/test_packet.py::TestPacket::test_encode_namespace_with_hyphens PASSED [ 57%]
+tests/common/test_packet.py::TestPacket::test_decode_namespace_with_hyphens PASSED [ 57%]
+tests/common/test_packet.py::TestPacket::test_encode_event_with_hyphens PASSED [ 57%]
+tests/common/test_packet.py::TestPacket::test_decode_event_with_hyphens PASSED [ 57%]
+tests/common/test_packet.py::TestPacket::test_encode_id PASSED           [ 58%]
+tests/common/test_packet.py::TestPacket::test_decode_id PASSED           [ 58%]
+tests/common/test_packet.py::TestPacket::test_decode_id_long PASSED      [ 58%]
+tests/common/test_packet.py::TestPacket::test_decode_id_too_long PASSED  [ 59%]
+tests/common/test_packet.py::TestPacket::test_encode_id_no_data PASSED   [ 59%]
+tests/common/test_packet.py::TestPacket::test_decode_id_no_data PASSED   [ 59%]
+tests/common/test_packet.py::TestPacket::test_encode_namespace_and_id PASSED [ 59%]
+tests/common/test_packet.py::TestPacket::test_decode_namespace_and_id PASSED [ 60%]
+tests/common/test_packet.py::TestPacket::test_encode_many_binary PASSED  [ 60%]
+tests/common/test_packet.py::TestPacket::test_encode_many_binary_ack PASSED [ 60%]
+tests/common/test_packet.py::TestPacket::test_decode_many_binary PASSED  [ 61%]
+tests/common/test_packet.py::TestPacket::test_decode_many_binary_ack PASSED [ 61%]
+tests/common/test_packet.py::TestPacket::test_decode_too_many_binary_packets PASSED [ 61%]
+tests/common/test_packet.py::TestPacket::test_decode_attachment_count_too_long PASSED [ 61%]
+tests/common/test_packet.py::TestPacket::test_decode_dash_in_payload PASSED [ 62%]
+tests/common/test_packet.py::TestPacket::test_data_is_binary_list PASSED [ 62%]
+tests/common/test_packet.py::TestPacket::test_data_is_binary_dict PASSED [ 62%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_default_init PASSED [ 63%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_custom_init PASSED [ 63%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_write_only_init PASSED [ 63%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_write_only_default_logger PASSED [ 63%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_write_only_with_provided_logger PASSED [ 64%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_emit PASSED [ 64%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_emit_with_to PASSED [ 64%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_emit_with_namespace PASSED [ 64%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_emit_with_room PASSED [ 65%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_emit_with_skip_sid PASSED [ 65%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_emit_with_callback PASSED [ 65%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_emit_with_callback_without_server PASSED [ 66%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_emit_with_callback_missing_room PASSED [ 66%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_emit_with_ignore_queue PASSED [ 66%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_can_disconnect PASSED [ 66%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_disconnect PASSED [ 67%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_disconnect_ignore_queue PASSED [ 67%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_enter_room PASSED [ 67%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_leave_room PASSED [ 68%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_close_room PASSED [ 68%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_close_room_with_namespace PASSED [ 68%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_emit PASSED [ 68%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_emit_with_namespace PASSED [ 69%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_emit_with_room PASSED [ 69%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_emit_with_skip_sid PASSED [ 69%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_emit_with_remote_callback PASSED [ 70%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_emit_with_local_callback PASSED [ 70%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_callback PASSED [ 70%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_callback_bad_host_id PASSED [ 70%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_callback_missing_args PASSED [ 71%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_disconnect PASSED [ 71%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_enter_room PASSED [ 71%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_leave_room PASSED [ 71%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_close_room PASSED [ 72%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_handle_close_room_with_namespace PASSED [ 72%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_background_thread PASSED [ 72%]
+tests/common/test_pubsub_manager.py::TestPubSubManager::test_background_thread_exception PASSED [ 73%]
+tests/common/test_redis_manager.py::TestPubSubManager::test_sentinel_url_parser PASSED [ 73%]
+tests/common/test_server.py::TestServer::test_create PASSED              [ 73%]
+tests/common/test_server.py::TestServer::test_on_event PASSED            [ 73%]
+tests/common/test_server.py::TestServer::test_event PASSED               [ 74%]
+tests/common/test_server.py::TestServer::test_emit PASSED                [ 74%]
+tests/common/test_server.py::TestServer::test_emit_default_namespace PASSED [ 74%]
+tests/common/test_server.py::TestServer::test_send PASSED                [ 75%]
+tests/common/test_server.py::TestServer::test_call PASSED                [ 75%]
+tests/common/test_server.py::TestServer::test_call_with_timeout PASSED   [ 75%]
+tests/common/test_server.py::TestServer::test_call_with_broadcast PASSED [ 75%]
+tests/common/test_server.py::TestServer::test_call_without_async_handlers PASSED [ 76%]
+tests/common/test_server.py::TestServer::test_enter_room PASSED          [ 76%]
+tests/common/test_server.py::TestServer::test_enter_room_default_namespace PASSED [ 76%]
+tests/common/test_server.py::TestServer::test_leave_room PASSED          [ 77%]
+tests/common/test_server.py::TestServer::test_leave_room_default_namespace PASSED [ 77%]
+tests/common/test_server.py::TestServer::test_close_room PASSED          [ 77%]
+tests/common/test_server.py::TestServer::test_close_room_default_namespace PASSED [ 77%]
+tests/common/test_server.py::TestServer::test_rooms PASSED               [ 78%]
+tests/common/test_server.py::TestServer::test_rooms_default_namespace PASSED [ 78%]
+tests/common/test_server.py::TestServer::test_handle_request PASSED      [ 78%]
+tests/common/test_server.py::TestServer::test_send_packet PASSED         [ 78%]
+tests/common/test_server.py::TestServer::test_send_eio_packet PASSED     [ 79%]
+tests/common/test_server.py::TestServer::test_transport PASSED           [ 79%]
+tests/common/test_server.py::TestServer::test_handle_connect FAILED      [ 79%]
+tests/common/test_server.py::TestServer::test_handle_connect_with_auth FAILED [ 80%]
+tests/common/test_server.py::TestServer::test_handle_connect_with_auth_none FAILED [ 80%]
+tests/common/test_server.py::TestServer::test_handle_connect_with_default_implied_namespaces PASSED [ 80%]
+tests/common/test_server.py::TestServer::test_handle_connect_with_implied_namespaces PASSED [ 80%]
+tests/common/test_server.py::TestServer::test_handle_connect_with_all_implied_namespaces PASSED [ 81%]
+tests/common/test_server.py::TestServer::test_handle_connect_namespace FAILED [ 81%]
+tests/common/test_server.py::TestServer::test_handle_connect_namespace_twice FAILED [ 81%]
+tests/common/test_server.py::TestServer::test_handle_connect_always_connect FAILED [ 82%]
+tests/common/test_server.py::TestServer::test_handle_connect_rejected FAILED [ 82%]
+tests/common/test_server.py::TestServer::test_handle_connect_namespace_rejected FAILED [ 82%]
+tests/common/test_server.py::TestServer::test_handle_connect_rejected_always_connect FAILED [ 82%]
+tests/common/test_server.py::TestServer::test_handle_connect_namespace_rejected_always_connect FAILED [ 83%]
+tests/common/test_server.py::TestServer::test_handle_connect_rejected_with_exception FAILED [ 83%]
+tests/common/test_server.py::TestServer::test_handle_connect_rejected_with_empty_exception FAILED [ 83%]
+tests/common/test_server.py::TestServer::test_handle_connect_namespace_rejected_with_exception PASSED [ 84%]
+tests/common/test_server.py::TestServer::test_handle_connect_namespace_rejected_with_empty_exception PASSED [ 84%]
+tests/common/test_server.py::TestServer::test_handle_disconnect FAILED   [ 84%]
+tests/common/test_server.py::TestServer::test_handle_legacy_disconnect FAILED [ 84%]
+tests/common/test_server.py::TestServer::test_handle_disconnect_namespace FAILED [ 85%]
+tests/common/test_server.py::TestServer::test_handle_disconnect_only_namespace FAILED [ 85%]
+tests/common/test_server.py::TestServer::test_handle_disconnect_unknown_client PASSED [ 85%]
+tests/common/test_server.py::TestServer::test_handle_event FAILED        [ 85%]
+tests/common/test_server.py::TestServer::test_handle_event_with_namespace FAILED [ 86%]
+tests/common/test_server.py::TestServer::test_handle_event_with_catchall_namespace FAILED [ 86%]
+tests/common/test_server.py::TestServer::test_handle_event_with_disconnected_namespace PASSED [ 86%]
+tests/common/test_server.py::TestServer::test_handle_event_binary FAILED [ 87%]
+tests/common/test_server.py::TestServer::test_handle_event_binary_ack PASSED [ 87%]
+tests/common/test_server.py::TestServer::test_handle_event_with_ack FAILED [ 87%]
+tests/common/test_server.py::TestServer::test_handle_unknown_event_with_ack PASSED [ 87%]
+tests/common/test_server.py::TestServer::test_handle_event_with_ack_none FAILED [ 88%]
+tests/common/test_server.py::TestServer::test_handle_event_with_ack_tuple FAILED [ 88%]
+tests/common/test_server.py::TestServer::test_handle_event_with_ack_list FAILED [ 88%]
+tests/common/test_server.py::TestServer::test_handle_event_with_ack_binary FAILED [ 89%]
+tests/common/test_server.py::TestServer::test_handle_error_packet PASSED [ 89%]
+tests/common/test_server.py::TestServer::test_handle_invalid_packet PASSED [ 89%]
+tests/common/test_server.py::TestServer::test_send_with_ack PASSED       [ 89%]
+tests/common/test_server.py::TestServer::test_send_with_ack_namespace PASSED [ 90%]
+tests/common/test_server.py::TestServer::test_session PASSED             [ 90%]
+tests/common/test_server.py::TestServer::test_disconnect PASSED          [ 90%]
+tests/common/test_server.py::TestServer::test_disconnect_ignore_queue PASSED [ 91%]
+tests/common/test_server.py::TestServer::test_disconnect_namespace PASSED [ 91%]
+tests/common/test_server.py::TestServer::test_disconnect_twice PASSED    [ 91%]
+tests/common/test_server.py::TestServer::test_disconnect_twice_namespace PASSED [ 91%]
+tests/common/test_server.py::TestServer::test_namespace_handler PASSED   [ 92%]
+tests/common/test_server.py::TestServer::test_catchall_namespace_handler PASSED [ 92%]
+tests/common/test_server.py::TestServer::test_bad_namespace_handler PASSED [ 92%]
+tests/common/test_server.py::TestServer::test_get_environ PASSED         [ 92%]
+tests/common/test_server.py::TestServer::test_logger PASSED              [ 93%]
+tests/common/test_server.py::TestServer::test_engineio_logger PASSED     [ 93%]
+tests/common/test_server.py::TestServer::test_msgpack PASSED             [ 93%]
+tests/common/test_server.py::TestServer::test_custom_serializer PASSED   [ 94%]
+tests/common/test_server.py::TestServer::test_custom_json PASSED         [ 94%]
+tests/common/test_server.py::TestServer::test_async_handlers PASSED      [ 94%]
+tests/common/test_server.py::TestServer::test_shutdown PASSED            [ 94%]
+tests/common/test_server.py::TestServer::test_start_background_task PASSED [ 95%]
+tests/common/test_server.py::TestServer::test_sleep PASSED               [ 95%]
+tests/common/test_simple_client.py::TestSimpleClient::test_constructor PASSED [ 95%]
+tests/common/test_simple_client.py::TestSimpleClient::test_connect PASSED [ 96%]
+tests/common/test_simple_client.py::TestSimpleClient::test_connect_context_manager PASSED [ 96%]
+tests/common/test_simple_client.py::TestSimpleClient::test_connect_twice PASSED [ 96%]
+tests/common/test_simple_client.py::TestSimpleClient::test_properties PASSED [ 96%]
+tests/common/test_simple_client.py::TestSimpleClient::test_emit PASSED   [ 97%]
+tests/common/test_simple_client.py::TestSimpleClient::test_emit_disconnected PASSED [ 97%]
+tests/common/test_simple_client.py::TestSimpleClient::test_emit_retries PASSED [ 97%]
+tests/common/test_simple_client.py::TestSimpleClient::test_call PASSED   [ 98%]
+tests/common/test_simple_client.py::TestSimpleClient::test_call_disconnected PASSED [ 98%]
+tests/common/test_simple_client.py::TestSimpleClient::test_call_retries PASSED [ 98%]
+tests/common/test_simple_client.py::TestSimpleClient::test_receive_with_input_buffer PASSED [ 98%]
+tests/common/test_simple_client.py::TestSimpleClient::test_receive_without_input_buffer PASSED [ 99%]
+tests/common/test_simple_client.py::TestSimpleClient::test_receive_with_timeout PASSED [ 99%]
+tests/common/test_simple_client.py::TestSimpleClient::test_receive_disconnected PASSED [ 99%]
+tests/common/test_simple_client.py::TestSimpleClient::test_disconnect PASSED [100%]
+=================================== FAILURES ===================================
+________________________ TestServer.test_handle_connect ________________________
+self = <tests.common.test_server.TestServer object at 0x104af88f0>
+eio = <MagicMock name='Server' id='4406006448'>
+    def test_handle_connect(self, eio):
+        s = server.Server()
+        s.manager.initialize = mock.MagicMock()
+        handler = mock.MagicMock()
+        s.on("connect", handler)
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0")
+        assert s.manager.is_connected("1", "/")
+>       handler.assert_called_once_with("1", "environ")
+tests/common/test_server.py:297:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405977040'>, args = ('1', 'environ'), kwargs = {}
+expected = call('1', 'environ'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x104e439c0>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'environ')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+___________________ TestServer.test_handle_connect_with_auth ___________________
+self = <tests.common.test_server.TestServer object at 0x104af8aa0>
+eio = <MagicMock name='Server' id='4406124928'>
+    def test_handle_connect_with_auth(self, eio):
+        s = server.Server()
+        s.manager.initialize = mock.MagicMock()
+        handler = mock.MagicMock()
+        s.on("connect", handler)
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", '0{"token":"abc"}')
+        assert s.manager.is_connected("1", "/")
+>       handler.assert_called_with("1", "environ", {"token": "abc"})
+tests/common/test_server.py:311:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4406139152'>, args = ('1', 'environ', {'token': 'abc'})
+kwargs = {}, expected = call('1', 'environ', {'token': 'abc'}), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x1069ea8e0>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'environ', {'token': 'abc'})
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+________________ TestServer.test_handle_connect_with_auth_none _________________
+self = <tests.common.test_server.TestServer object at 0x104af8c80>
+eio = <MagicMock name='Server' id='4406097104'>
+    def test_handle_connect_with_auth_none(self, eio):
+        s = server.Server()
+        s.manager.initialize = mock.MagicMock()
+        handler = mock.MagicMock(side_effect=[TypeError, None])
+        s.on("connect", handler)
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0")
+        assert s.manager.is_connected("1", "/")
+>       handler.assert_called_with("1", "environ", None)
+tests/common/test_server.py:325:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405975024'>, args = ('1', 'environ', None), kwargs = {}
+expected = call('1', 'environ', None), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x104e432e0>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'environ', None)
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+___________________ TestServer.test_handle_connect_namespace ___________________
+self = <tests.common.test_server.TestServer object at 0x104af9370>
+eio = <MagicMock name='Server' id='4373990816'>
+    def test_handle_connect_namespace(self, eio):
+        s = server.Server()
+        handler = mock.MagicMock()
+        s.on("connect", handler, namespace="/foo")
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0/foo,")
+        assert s.manager.is_connected("1", "/foo")
+>       handler.assert_called_once_with("1", "environ")
+tests/common/test_server.py:362:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4375981008'>, args = ('1', 'environ'), kwargs = {}
+expected = call('1', 'environ'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x1069eb1a0>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'environ')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+________________ TestServer.test_handle_connect_namespace_twice ________________
+self = <tests.common.test_server.TestServer object at 0x104af9520>
+eio = <MagicMock name='Server' id='4406405424'>
+    def test_handle_connect_namespace_twice(self, eio):
+        s = server.Server()
+        handler = mock.MagicMock()
+        s.on("connect", handler, namespace="/foo")
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0/foo,")
+        s._handle_eio_message("123", "0/foo,")
+        assert s.manager.is_connected("1", "/foo")
+>       handler.assert_called_once_with("1", "environ")
+tests/common/test_server.py:373:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405785664'>, args = ('1', 'environ'), kwargs = {}
+expected = call('1', 'environ'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x104e432e0>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'environ')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+________________ TestServer.test_handle_connect_always_connect _________________
+self = <tests.common.test_server.TestServer object at 0x104af96d0>
+eio = <MagicMock name='Server' id='4374362496'>
+    def test_handle_connect_always_connect(self, eio):
+        s = server.Server(always_connect=True)
+        s.manager.initialize = mock.MagicMock()
+        handler = mock.MagicMock()
+        s.on("connect", handler)
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0")
+        assert s.manager.is_connected("1", "/")
+>       handler.assert_called_once_with("1", "environ")
+tests/common/test_server.py:385:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405819584'>, args = ('1', 'environ'), kwargs = {}
+expected = call('1', 'environ'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x1069eade0>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'environ')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+___________________ TestServer.test_handle_connect_rejected ____________________
+self = <tests.common.test_server.TestServer object at 0x104af9880>
+eio = <MagicMock name='Server' id='4405978480'>
+    def test_handle_connect_rejected(self, eio):
+        s = server.Server()
+        handler = mock.MagicMock(return_value=False)
+        s.on("connect", handler)
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0")
+        assert not s.manager.is_connected("1", "/")
+>       handler.assert_called_once_with("1", "environ")
+tests/common/test_server.py:398:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4406089376'>, args = ('1', 'environ'), kwargs = {}
+expected = call('1', 'environ'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x1069eb560>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'environ')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+______________ TestServer.test_handle_connect_namespace_rejected _______________
+self = <tests.common.test_server.TestServer object at 0x104af9a30>
+eio = <MagicMock name='Server' id='4406976272'>
+    def test_handle_connect_namespace_rejected(self, eio):
+        s = server.Server()
+        handler = mock.MagicMock(return_value=False)
+        s.on("connect", handler, namespace="/foo")
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0/foo,")
+        assert not s.manager.is_connected("1", "/foo")
+>       handler.assert_called_once_with("1", "environ")
+tests/common/test_server.py:412:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4406958784'>, args = ('1', 'environ'), kwargs = {}
+expected = call('1', 'environ'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x104ad5580>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'environ')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+____________ TestServer.test_handle_connect_rejected_always_connect ____________
+self = <tests.common.test_server.TestServer object at 0x104af9be0>
+eio = <MagicMock name='Server' id='4406095232'>
+    def test_handle_connect_rejected_always_connect(self, eio):
+        s = server.Server(always_connect=True)
+        handler = mock.MagicMock(return_value=False)
+        s.on("connect", handler)
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0")
+        assert not s.manager.is_connected("1", "/")
+>       handler.assert_called_once_with("1", "environ")
+tests/common/test_server.py:426:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405971232'>, args = ('1', 'environ'), kwargs = {}
+expected = call('1', 'environ'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x1069eb7e0>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'environ')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+_______ TestServer.test_handle_connect_namespace_rejected_always_connect _______
+self = <tests.common.test_server.TestServer object at 0x104adfe30>
+eio = <MagicMock name='Server' id='4405841360'>
+    def test_handle_connect_namespace_rejected_always_connect(self, eio):
+        s = server.Server(always_connect=True)
+        handler = mock.MagicMock(return_value=False)
+        s.on("connect", handler, namespace="/foo")
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0/foo,")
+        assert not s.manager.is_connected("1", "/foo")
+>       handler.assert_called_once_with("1", "environ")
+tests/common/test_server.py:440:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405931824'>, args = ('1', 'environ'), kwargs = {}
+expected = call('1', 'environ'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x1069eb880>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'environ')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+____________ TestServer.test_handle_connect_rejected_with_exception ____________
+self = <tests.common.test_server.TestServer object at 0x104adf320>
+eio = <MagicMock name='Server' id='4405909200'>
+    def test_handle_connect_rejected_with_exception(self, eio):
+        s = server.Server()
+        handler = mock.MagicMock(
+            side_effect=exceptions.ConnectionRefusedError("fail_reason")
+        )
+        s.on("connect", handler)
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0")
+        assert not s.manager.is_connected("1", "/")
+>       handler.assert_called_once_with("1", "environ")
+tests/common/test_server.py:456:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405784224'>, args = ('1', 'environ'), kwargs = {}
+expected = call('1', 'environ'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x1069ebf60>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'environ')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+_________ TestServer.test_handle_connect_rejected_with_empty_exception _________
+self = <tests.common.test_server.TestServer object at 0x104af98b0>
+eio = <MagicMock name='Server' id='4406880032'>
+    def test_handle_connect_rejected_with_empty_exception(self, eio):
+        s = server.Server()
+        handler = mock.MagicMock(side_effect=exceptions.ConnectionRefusedError())
+        s.on("connect", handler)
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0")
+        assert not s.manager.is_connected("1", "/")
+>       handler.assert_called_once_with("1", "environ")
+tests/common/test_server.py:467:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4407094176'>, args = ('1', 'environ'), kwargs = {}
+expected = call('1', 'environ'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x104e43420>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'environ')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+______________________ TestServer.test_handle_disconnect _______________________
+self = <tests.common.test_server.TestServer object at 0x104af8920>
+eio = <MagicMock name='Server' id='4405852400'>
+    def test_handle_disconnect(self, eio):
+        s = server.Server()
+        s.manager.disconnect = mock.MagicMock()
+        handler = mock.MagicMock()
+        s.on("disconnect", handler)
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0")
+        s._handle_eio_disconnect("123", "foo")
+>       handler.assert_called_once_with("1", "foo")
+tests/common/test_server.py:507:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405981984'>, args = ('1', 'foo'), kwargs = {}
+expected = call('1', 'foo'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x106d08180>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'foo')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+___________________ TestServer.test_handle_legacy_disconnect ___________________
+self = <tests.common.test_server.TestServer object at 0x104af8410>
+eio = <MagicMock name='Server' id='4406819488'>
+    def test_handle_legacy_disconnect(self, eio):
+        s = server.Server()
+        s.manager.disconnect = mock.MagicMock()
+        handler = mock.MagicMock(side_effect=[TypeError, None])
+        s.on("disconnect", handler)
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0")
+>       s._handle_eio_disconnect("123", "foo")
+tests/common/test_server.py:518:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src/fastsio/server.py:872: in _handle_eio_disconnect
+    self._handle_disconnect(eio_sid, n, reason)
+src/fastsio/server.py:652: in _handle_disconnect
+    self._trigger_event(
+src/fastsio/server.py:777: in _trigger_event
+    ret = self._run_sync_with_context(
+src/fastsio/server.py:826: in _run_sync_with_context
+    return func(**resolved)
+           ^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:1137: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:1141: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4408175376'>, args = (), kwargs = {}
+effect = <list_iterator object at 0x106bf4cd0>, result = <class 'TypeError'>
+    def _execute_mock_call(self, /, *args, **kwargs):
+        # separate from _increment_mock_call so that awaited functions are
+        # executed separately from their call, also AsyncMock overrides this method
+
+        effect = self.side_effect
+        if effect is not None:
+            if _is_exception(effect):
+                raise effect
+            elif not _callable(effect):
+                result = next(effect)
+                if _is_exception(result):
+>                   raise result
+E                   TypeError
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:1200: TypeError
+_________________ TestServer.test_handle_disconnect_namespace __________________
+self = <tests.common.test_server.TestServer object at 0x104af9d00>
+eio = <MagicMock name='Server' id='4406807536'>
+    def test_handle_disconnect_namespace(self, eio):
+        s = server.Server()
+        handler = mock.MagicMock()
+        s.on("disconnect", handler)
+        handler_namespace = mock.MagicMock()
+        s.on("disconnect", handler_namespace, namespace="/foo")
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0/foo,")
+        s._handle_eio_disconnect("123", "foo")
+        handler.assert_not_called()
+>       handler_namespace.assert_called_once_with("1", "foo")
+tests/common/test_server.py:533:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405982800'>, args = ('1', 'foo'), kwargs = {}
+expected = call('1', 'foo'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x104ad5580>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'foo')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+_______________ TestServer.test_handle_disconnect_only_namespace _______________
+self = <tests.common.test_server.TestServer object at 0x104af9eb0>
+eio = <MagicMock name='Server' id='4405905888'>
+    def test_handle_disconnect_only_namespace(self, eio):
+        s = server.Server()
+        handler = mock.MagicMock()
+        s.on("disconnect", handler)
+        handler_namespace = mock.MagicMock()
+        s.on("disconnect", handler_namespace, namespace="/foo")
+        s._handle_eio_connect("123", "environ")
+        s._handle_eio_message("123", "0/foo,")
+        s._handle_eio_message("123", "1/foo,")
+        assert handler.call_count == 0
+>       handler_namespace.assert_called_once_with("1", s.reason.CLIENT_DISCONNECT)
+tests/common/test_server.py:546:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405815936'>, args = ('1', 'client disconnect')
+kwargs = {}, expected = call('1', 'client disconnect'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x106d08720>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'client disconnect')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+_________________________ TestServer.test_handle_event _________________________
+self = <tests.common.test_server.TestServer object at 0x104afa210>
+eio = <MagicMock name='Server' id='4408102496'>
+    def test_handle_event(self, eio):
+        s = server.Server(async_handlers=False)
+        s.manager.connect("123", "/")
+        handler = mock.MagicMock()
+        catchall_handler = mock.MagicMock()
+        s.on("msg", handler)
+        s.on("*", catchall_handler)
+        s._handle_eio_message("123", '2["msg","a","b"]')
+        s._handle_eio_message("123", '2["my message","a","b","c"]')
+>       handler.assert_called_once_with("1", "a", "b")
+tests/common/test_server.py:563:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4407395632'>, args = ('1', 'a', 'b'), kwargs = {}
+expected = call('1', 'a', 'b'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x1069ebf60>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'a', 'b')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+_________________ TestServer.test_handle_event_with_namespace __________________
+self = <tests.common.test_server.TestServer object at 0x104afa3c0>
+eio = <MagicMock name='Server' id='4405921360'>
+    def test_handle_event_with_namespace(self, eio):
+        s = server.Server(async_handlers=False)
+        s.manager.connect("123", "/foo")
+        handler = mock.MagicMock()
+        catchall_handler = mock.MagicMock()
+        s.on("msg", handler, namespace="/foo")
+        s.on("*", catchall_handler, namespace="/foo")
+        s._handle_eio_message("123", '2/foo,["msg","a","b"]')
+        s._handle_eio_message("123", '2/foo,["my message","a","b","c"]')
+>       handler.assert_called_once_with("1", "a", "b")
+tests/common/test_server.py:575:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405776880'>, args = ('1', 'a', 'b'), kwargs = {}
+expected = call('1', 'a', 'b'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x106d08ea0>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'a', 'b')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+_____________ TestServer.test_handle_event_with_catchall_namespace _____________
+self = <tests.common.test_server.TestServer object at 0x104afa570>
+eio = <MagicMock name='Server' id='4405904544'>
+    def test_handle_event_with_catchall_namespace(self, eio):
+        s = server.Server(async_handlers=False)
+        sid_foo = s.manager.connect("123", "/foo")
+        sid_bar = s.manager.connect("123", "/bar")
+        sid_baz = s.manager.connect("123", "/baz")
+        connect_star_handler = mock.MagicMock()
+        msg_foo_handler = mock.MagicMock()
+        msg_star_handler = mock.MagicMock()
+        star_foo_handler = mock.MagicMock()
+        star_star_handler = mock.MagicMock()
+        my_message_baz_handler = mock.MagicMock()
+        s.on("connect", connect_star_handler, namespace="*")
+        s.on("msg", msg_foo_handler, namespace="/foo")
+        s.on("msg", msg_star_handler, namespace="*")
+        s.on("*", star_foo_handler, namespace="/foo")
+        s.on("*", star_star_handler, namespace="*")
+        s.on("my message", my_message_baz_handler, namespace="/baz")
+
+        s._trigger_event("connect", "/bar", sid_bar)
+        s._handle_eio_message("123", '2/foo,["msg","a","b"]')
+        s._handle_eio_message("123", '2/bar,["msg","a","b"]')
+        s._handle_eio_message("123", '2/foo,["my message","a","b","c"]')
+        s._handle_eio_message("123", '2/bar,["my message","a","b","c"]')
+        s._trigger_event("disconnect", "/bar", sid_bar, s.reason.CLIENT_DISCONNECT)
+>       connect_star_handler.assert_called_once_with("/bar", sid_bar)
+tests/common/test_server.py:602:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405973248'>, args = ('/bar', '2'), kwargs = {}
+expected = call('/bar', '2'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x1069ea340>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('/bar', '2')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+_____________________ TestServer.test_handle_event_binary ______________________
+self = <tests.common.test_server.TestServer object at 0x104afa8d0>
+eio = <MagicMock name='Server' id='4406131936'>
+    def test_handle_event_binary(self, eio):
+        s = server.Server(async_handlers=False)
+        s.manager.connect("123", "/")
+        handler = mock.MagicMock()
+        s.on("my message", handler)
+        s._handle_eio_message(
+            "123",
+            '52-["my message","a",'
+            '{"_placeholder":true,"num":1},'
+            '{"_placeholder":true,"num":0}]',
+        )
+        s._handle_eio_message("123", b"foo")
+        s._handle_eio_message("123", b"bar")
+>       handler.assert_called_once_with("1", "a", b"bar", b"foo")
+tests/common/test_server.py:636:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4407081104'>, args = ('1', 'a', b'bar', b'foo')
+kwargs = {}, expected = call('1', 'a', b'bar', b'foo'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x106d089a0>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'a', b'bar', b'foo')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+____________________ TestServer.test_handle_event_with_ack _____________________
+self = <tests.common.test_server.TestServer object at 0x104afac30>
+eio = <MagicMock name='Server' id='4407926016'>
+    def test_handle_event_with_ack(self, eio):
+        s = server.Server(async_handlers=False)
+        sid = s.manager.connect("123", "/")
+        handler = mock.MagicMock(return_value="foo")
+        s.on("my message", handler)
+        s._handle_eio_message("123", '21000["my message","foo"]')
+>       handler.assert_called_once_with(sid, "foo")
+tests/common/test_server.py:656:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4407204352'>, args = ('1', 'foo'), kwargs = {}
+expected = call('1', 'foo'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x106d09bc0>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'foo')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+__________________ TestServer.test_handle_event_with_ack_none __________________
+self = <tests.common.test_server.TestServer object at 0x104afaf90>
+eio = <MagicMock name='Server' id='4407930384'>
+    def test_handle_event_with_ack_none(self, eio):
+        s = server.Server(async_handlers=False)
+        sid = s.manager.connect("123", "/")
+        handler = mock.MagicMock(return_value=None)
+        s.on("my message", handler)
+        s._handle_eio_message("123", '21000["my message","foo"]')
+>       handler.assert_called_once_with(sid, "foo")
+tests/common/test_server.py:673:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4407198976'>, args = ('1', 'foo'), kwargs = {}
+expected = call('1', 'foo'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x106d096c0>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'foo')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+_________________ TestServer.test_handle_event_with_ack_tuple __________________
+self = <tests.common.test_server.TestServer object at 0x104afb140>
+eio = <MagicMock name='Server' id='4407910784'>
+    def test_handle_event_with_ack_tuple(self, eio):
+        s = server.Server(async_handlers=False)
+        handler = mock.MagicMock(return_value=(1, "2", True))
+        s.on("my message", handler)
+        sid = s.manager.connect("123", "/")
+        s._handle_eio_message("123", '21000["my message","a","b","c"]')
+>       handler.assert_called_once_with(sid, "a", "b", "c")
+tests/common/test_server.py:682:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405813392'>, args = ('1', 'a', 'b', 'c'), kwargs = {}
+expected = call('1', 'a', 'b', 'c'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x106d08720>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'a', 'b', 'c')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+__________________ TestServer.test_handle_event_with_ack_list __________________
+self = <tests.common.test_server.TestServer object at 0x104afb2f0>
+eio = <MagicMock name='Server' id='4405932832'>
+    def test_handle_event_with_ack_list(self, eio):
+        s = server.Server(async_handlers=False)
+        handler = mock.MagicMock(return_value=[1, "2", True])
+        s.on("my message", handler)
+        sid = s.manager.connect("123", "/")
+        s._handle_eio_message("123", '21000["my message","a","b","c"]')
+>       handler.assert_called_once_with(sid, "a", "b", "c")
+tests/common/test_server.py:691:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:959: in assert_called_once_with
+    return self.assert_called_with(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4405909152'>, args = ('1', 'a', 'b', 'c'), kwargs = {}
+expected = call('1', 'a', 'b', 'c'), actual = call()
+_error_message = <function NonCallableMock.assert_called_with.<locals>._error_message at 0x106d09760>
+cause = None
+    def assert_called_with(self, /, *args, **kwargs):
+        """assert that the last call was made with the specified arguments.
+
+        Raises an AssertionError if the args and keyword args passed in are
+        different to the last call to the mock."""
+        if self.call_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            actual = 'not called.'
+            error_message = ('expected call not found.\nExpected: %s\n  Actual: %s'
+                    % (expected, actual))
+            raise AssertionError(error_message)
+
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs)
+            return msg
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.call_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected call not found.
+E           Expected: mock('1', 'a', 'b', 'c')
+E             Actual: mock()
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:947: AssertionError
+_________________ TestServer.test_handle_event_with_ack_binary _________________
+self = <tests.common.test_server.TestServer object at 0x104afb4a0>
+eio = <MagicMock name='Server' id='4408023552'>
+    def test_handle_event_with_ack_binary(self, eio):
+        s = server.Server(async_handlers=False)
+        handler = mock.MagicMock(return_value=b"foo")
+        s.on("my message", handler)
+        sid = s.manager.connect("123", "/")
+        s._handle_eio_message("123", '21000["my message","foo"]')
+>       handler.assert_any_call(sid, "foo")
+tests/common/test_server.py:700:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+self = <MagicMock id='4407951536'>, args = ('1', 'foo'), kwargs = {}
+expected = call('1', 'foo'), cause = None, actual = [call()]
+expected_string = "mock('1', 'foo')"
+    def assert_any_call(self, /, *args, **kwargs):
+        """assert the mock has been called with the specified arguments.
+
+        The assert passes if the mock has *ever* been called, unlike
+        `assert_called_with` and `assert_called_once_with` that only pass if
+        the call is the most recent one."""
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        cause = expected if isinstance(expected, Exception) else None
+        actual = [self._call_matcher(c) for c in self.call_args_list]
+        if cause or expected not in _AnyComparer(actual):
+            expected_string = self._format_mock_call_signature(args, kwargs)
+>           raise AssertionError(
+                '%s call not found' % expected_string
+            ) from cause
+E           AssertionError: mock('1', 'foo') call not found
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py:1018: AssertionError
+=========================== short test summary info ============================
+FAILED tests/common/test_server.py::TestServer::test_handle_connect - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_connect_with_auth - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_connect_with_auth_none - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_connect_namespace - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_connect_namespace_twice - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_connect_always_connect - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_connect_rejected - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_connect_namespace_rejected - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_connect_rejected_always_connect - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_connect_namespace_rejected_always_connect - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_connect_rejected_with_exception - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_connect_rejected_with_empty_exception - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_disconnect - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_legacy_disconnect - TypeError
+FAILED tests/common/test_server.py::TestServer::test_handle_disconnect_namespace - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_disconnect_only_namespace - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_event - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_event_with_namespace - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_event_with_catchall_namespace - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_event_binary - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_event_with_ack - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_event_with_ack_none - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_event_with_ack_tuple - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_event_with_ack_list - AssertionError: expected call not found.
+FAILED tests/common/test_server.py::TestServer::test_handle_event_with_ack_binary - AssertionError: mock('1', 'foo') call not found
+================== 25 failed, 323 passed, 9 skipped in 1.57s ===================

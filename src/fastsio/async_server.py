@@ -774,7 +774,7 @@ class AsyncServer(base_server.BaseServer):
         id: Optional[int],
     ) -> None:
         r = await server._trigger_event(data[0], namespace, sid, *data[1:])
-        if r != self.not_handled and id is not None:
+        if r != server.not_handled and id is not None:
             # send ACK packet with the response returned by the handler
             # tuples are expanded as multiple arguments
             if r is None:
@@ -785,7 +785,7 @@ class AsyncServer(base_server.BaseServer):
                 data = [r]
             await server._send_packet(
                 eio_sid,
-                self.packet_class(packet.ACK, namespace=namespace, id=id, data=data),
+                server.packet_class(packet.ACK, namespace=namespace, id=id, data=data),
             )
 
     async def _handle_ack(
@@ -839,16 +839,31 @@ class AsyncServer(base_server.BaseServer):
             if event == "disconnect" and len(args) > 0:
                 disconnect_reason = args[-1]
 
-            ret = await run_with_context(
-                handler,
-                socket_id=original_sid,
-                environ=computed_environ,
-                auth=connect_auth_payload if event == "connect" else None,
-                reason=disconnect_reason if event == "disconnect" else None,
-                data=payload_data,
-                event=event,
-                server=self,
-            )
+            # Execute middleware chain if middlewares are registered
+            if hasattr(self, '_middleware_chain') and self._middleware_chain.middlewares:
+                # Use middleware chain for execution
+                ret = await self._middleware_chain.execute(
+                    event=event,
+                    sid=original_sid or "",
+                    data=payload_data,
+                    handler=handler,
+                    namespace=namespace,
+                    environ=computed_environ,
+                    auth=connect_auth_payload if event == "connect" else None,
+                    server=self,
+                )
+            else:
+                # Use ContextVar-based dependency injection
+                ret = await run_with_context(
+                    handler,
+                    socket_id=original_sid,
+                    environ=computed_environ,
+                    auth=connect_auth_payload if event == "connect" else None,
+                    reason=disconnect_reason if event == "disconnect" else None,
+                    data=payload_data,
+                    event=event,
+                    server=self,
+                )
 
             # Validate response if response_model is defined
             ret = self._validate_response(handler, ret)

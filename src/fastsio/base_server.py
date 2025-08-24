@@ -1,7 +1,10 @@
 import logging
 
 # pyright: reportMissingImports=false
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .middlewares import BaseMiddleware
 
 import engineio
 
@@ -74,6 +77,10 @@ class BaseServer:
         self.not_handled: object = object()
 
         self._binary_packet: Dict[str, Any] = {}
+        
+        # Initialize middleware system
+        from .middlewares import MiddlewareChain
+        self._middleware_chain = MiddlewareChain()
 
         if not isinstance(logger, bool):
             self.logger = logger
@@ -467,3 +474,52 @@ class BaseServer:
 
     def _engineio_server_class(self) -> Any:  # pragma: no cover
         raise NotImplementedError("Must be implemented in subclasses")
+    
+    def add_middleware(
+        self,
+        middleware: "BaseMiddleware",
+        events: Optional[Union[str, List[str]]] = None,
+        namespace: Optional[str] = None,
+        global_middleware: bool = False
+    ) -> None:
+        """
+        Add middleware to the server.
+        
+        Args:
+            middleware: Middleware instance to add
+            events: Specific events to apply middleware to (overrides middleware's own events)
+            namespace: Specific namespace to apply middleware to (overrides middleware's own namespace)
+            global_middleware: If True, this middleware runs for all events regardless of namespace
+        """
+        # Override middleware settings if provided
+        if events is not None:
+            if isinstance(events, str):
+                middleware.events = {events}
+            else:
+                middleware.events = set(events)
+        
+        if namespace is not None:
+            middleware.namespace = namespace
+            
+        if global_middleware:
+            middleware.global_middleware = True
+            
+        self._middleware_chain.add_middleware(middleware)
+    
+    def remove_middleware(self, middleware: "BaseMiddleware") -> None:
+        """
+        Remove middleware from the server.
+        
+        Args:
+            middleware: Middleware instance to remove
+        """
+        self._middleware_chain.remove_middleware(middleware)
+    
+    def get_middlewares(self) -> List["BaseMiddleware"]:
+        """
+        Get list of registered middlewares.
+        
+        Returns:
+            List of middleware instances
+        """
+        return self._middleware_chain.middlewares.copy()

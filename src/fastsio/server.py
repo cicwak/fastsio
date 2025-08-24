@@ -671,7 +671,7 @@ class Server(base_server.BaseServer):
 
     def _handle_event_internal(self, server, sid, eio_sid, data, namespace, id):
         r = server._trigger_event(data[0], namespace, sid, *data[1:])
-        if r != self.not_handled and id is not None:
+        if r != server.not_handled and id is not None:
             # send ACK packet with the response returned by the handler
             # tuples are expanded as multiple arguments
             if r is None:
@@ -682,7 +682,7 @@ class Server(base_server.BaseServer):
                 data = [r]
             server._send_packet(
                 eio_sid,
-                self.packet_class(packet.ACK, namespace=namespace, id=id, data=data),
+                server.packet_class(packet.ACK, namespace=namespace, id=id, data=data),
             )
 
     def _handle_ack(self, eio_sid, namespace, id, data):
@@ -732,44 +732,58 @@ class Server(base_server.BaseServer):
             if event == "disconnect" and len(args) > 0:
                 disconnect_reason = args[-1]
 
-            # Use ContextVar-based dependency injection
-            from .dependency import run_with_context
-            
-            # For sync handlers, we need to handle differently
-            if inspect.iscoroutinefunction(handler):
-                # This shouldn't happen in sync server, but just in case
-                import asyncio
-                try:
-                    loop = asyncio.get_running_loop()
-                    # We can't await in sync context, so this is an error
-                    raise RuntimeError("Async handler in sync server - use AsyncServer instead")
-                except RuntimeError as e:
-                    if "no running event loop" in str(e):
-                        # No loop, create one for this call
-                        ret = asyncio.run(run_with_context(
-                            handler,
-                            socket_id=original_sid,
-                            environ=computed_environ,
-                            auth=connect_auth_payload if event == "connect" else None,
-                            reason=disconnect_reason if event == "disconnect" else None,
-                            data=payload_data,
-                            event=event,
-                            server=self,
-                        ))
-                    else:
-                        raise
-            else:
-                # Sync handler - use sync version of DI
-                ret = self._run_sync_with_context(
-                    handler,
-                    socket_id=original_sid,
+            # Execute middleware chain if middlewares are registered
+            if hasattr(self, '_middleware_chain') and self._middleware_chain.middlewares:
+                # Use middleware chain for execution
+                ret = self._middleware_chain.execute(
+                    event=event,
+                    sid=original_sid or "",
+                    data=payload_data,
+                    handler=handler,
+                    namespace=namespace,
                     environ=computed_environ,
                     auth=connect_auth_payload if event == "connect" else None,
-                    reason=disconnect_reason if event == "disconnect" else None,
-                    data=payload_data,
-                    event=event,
                     server=self,
                 )
+            else:
+                # Use ContextVar-based dependency injection
+                from .dependency import run_with_context
+
+                # For sync handlers, we need to handle differently
+                if inspect.iscoroutinefunction(handler):
+                    # This shouldn't happen in sync server, but just in case
+                    import asyncio
+                    try:
+                        loop = asyncio.get_running_loop()
+                        # We can't await in sync context, so this is an error
+                        raise RuntimeError("Async handler in sync server - use AsyncServer instead")
+                    except RuntimeError as e:
+                        if "no running event loop" in str(e):
+                            # No loop, create one for this call
+                            ret = asyncio.run(run_with_context(
+                                handler,
+                                socket_id=original_sid,
+                                environ=computed_environ,
+                                auth=connect_auth_payload if event == "connect" else None,
+                                reason=disconnect_reason if event == "disconnect" else None,
+                                data=payload_data,
+                                event=event,
+                                server=self,
+                            ))
+                        else:
+                            raise
+                else:
+                    # Sync handler - use sync version of DI
+                    ret = self._run_sync_with_context(
+                        handler,
+                        socket_id=original_sid,
+                        environ=computed_environ,
+                        auth=connect_auth_payload if event == "connect" else None,
+                        reason=disconnect_reason if event == "disconnect" else None,
+                        data=payload_data,
+                        event=event,
+                        server=self,
+                    )
 
             # Validate response if response_model is defined
             ret = self._validate_response(handler, ret)
@@ -794,11 +808,11 @@ class Server(base_server.BaseServer):
     ) -> Any:
         """
         Run a synchronous function with dependency injection context.
-        
+
         This is a simplified version for sync handlers that uses
         sync dependency resolution.
         """
-        
+
         with DependencyContext(
             socket_id=socket_id,
             environ=environ,

@@ -1,35 +1,42 @@
-Socket.IO Server Examples
-=========================
+Server Examples
+==============
 
-This directory contains several example Socket.IO applications, organized by
-directory:
+This directory contains various examples of how to use fastsio servers.
 
-wsgi
-----
+Examples
+--------
 
-Examples that are compatible with the WSGI protocol and frameworks.
+- **aiohttp/**: ASGI server with aiohttp
+- **asgi/**: ASGI server with various frameworks
+- **sanic/**: Sanic server integration
+- **tornado/**: Tornado server integration
+- **wsgi/**: WSGI server with various frameworks
+- **middleware_example.py**: **NEW!** Complete example demonstrating middleware usage
 
-asgi
-----
+Middleware Example
+-----------------
 
-Examples that are compatible with the ASGI specification.
+The `middleware_example.py` file demonstrates the new middleware system in fastsio:
 
-aiohttp
--------
+- **Global middlewares**: Applied to all events
+- **Event-specific middlewares**: Applied only to specific events
+- **Namespace-specific middlewares**: Applied only to specific namespaces
+- **Custom middlewares**: Both method-based and call-based implementations
+- **Built-in middlewares**: Authentication, logging, and rate limiting
 
-Examples that are compatible with the aiohttp framework for asyncio.
+Run the example:
 
-sanic
------
+.. code:: bash
 
-Examples that are compatible with the sanic framework for asyncio.
+    cd examples/server
+    python middleware_example.py
 
-tornado
--------
+Key Features Demonstrated:
 
-Examples that are compatible with the tornado framework.
+1. **Authentication Middleware**: Checks authorization headers
+2. **Logging Middleware**: Logs all events and responses
+3. **Rate Limiting**: Prevents spam by limiting requests per time window
+4. **Data Transformation**: Modifies incoming data and outgoing responses
+5. **Custom Middleware Classes**: Shows both sync and async implementations
 
-javascript
-----------
-
-Examples that use the JavaScript version of Socket.IO for compatiblity testing.
+This example is perfect for understanding how to implement production-ready Socket.IO applications with proper middleware layers.

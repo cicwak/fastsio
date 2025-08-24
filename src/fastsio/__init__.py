@@ -11,6 +11,14 @@ from .kafka_manager import KafkaManager
 from .kombu_manager import KombuManager
 from .manager import Manager
 from .middleware import Middleware, WSGIApp
+from .middlewares import (
+    BaseMiddleware,
+    SyncMiddleware,
+    MiddlewareChain,
+    auth_middleware,
+    logging_middleware,
+    rate_limit_middleware,
+)
 from .namespace import ClientNamespace, Namespace
 from .pubsub_manager import PubSubManager
 from .redis_manager import RedisManager
@@ -33,17 +41,20 @@ __all__ = [
     "AsyncRedisManager",
     "AsyncServer",
     "AsyncSimpleClient",
+    "BaseMiddleware",
     "Client",
     "ClientNamespace",
     "KafkaManager",
     "KombuManager",
     "Manager",
     "Middleware",
+    "MiddlewareChain",
     "Namespace",
     "PubSubManager",
     "RedisManager",
     "Server",
     "SimpleClient",
+    "SyncMiddleware",
     "WSGIApp",
     "ZmqManager",
     "get_tornado_handler",
@@ -56,5 +67,9 @@ __all__ = [
     "Data",
     "Event",
     "Depends",
+
     "register_dependency",
+    "auth_middleware",
+    "logging_middleware",
+    "rate_limit_middleware",
 ]

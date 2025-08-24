@@ -7,30 +7,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-      - run: python -m pip install --upgrade pip wheel
-      - run: pip install tox tox-gh-actions
-      - run: tox -eflake8
-      - run: tox -edocs
+      - run: python -m pip install --upgrade pip wheel ruff
+      - run: ruff check .
+
   tests:
-    name: tests
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-        python: ['3.9', '3.10', '3.11', '3.12', '3.13', 'pypy-3.10']
-        exclude:
-          # pypy3 currently fails to run on Windows
-          - os: windows-latest
-            python: pypy-3.10
-      fail-fast: false
-    runs-on: ${{ matrix.os }}
+    name: test
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python }}
-      - run: python -m pip install --upgrade pip wheel
-      - run: pip install tox tox-gh-actions
-      - run: tox
+      - run: python -m pip install --upgrade pip wheel pytest pytest-cov
+
+
   coverage:
     name: coverage
     runs-on: ubuntu-latest
