@@ -34,6 +34,9 @@ requests = "^2.32.5"
 uvicorn = "^0.35.0"
 pytest-asyncio = "^1.1.0"
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
 [tool.setuptools]
 zip-safe = false
 include-package-data = true

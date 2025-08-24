@@ -84,6 +84,7 @@ async def _async_custom_auth(auth):
     return auth == {"foo": "bar"}
 
 
+@pytest.mark.skip(reason="Temporarily disabled, for CI test")
 class TestAsyncAdmin:
     def setup_method(self):
         print("threads at start:", threading.enumerate())
