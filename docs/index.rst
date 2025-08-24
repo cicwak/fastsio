@@ -17,6 +17,7 @@ or integrated with a variety of Python web frameworks.
    server
    routers
    dependency_injection
+   middlewares
    pydantic
    api
 

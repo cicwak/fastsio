@@ -9,6 +9,7 @@
 - **Strong typing** and **FastAPI-like DX** with dependency injection
 - **Automatic validation** of data through Pydantic models
 - **Lightweight routers** for code organization via `RouterSIO`
+- **Flexible middleware system** for authentication, logging, rate limiting, and more
 - **Compatibility** with existing ASGI/WSGI stacks
 - **Full support** for the Socket.IO protocol
 
@@ -27,6 +28,7 @@ pip install fastsio
 | **Dependency Injection** | ❌ | ✅ FastAPI-style |
 | **Pydantic Validation** | ❌ | ✅ Automatic |
 | **Routers** | ❌ | ✅ RouterSIO for code organization |
+| **Middlewares** | ❌ | ✅ Flexible middleware system |
 | **Parameter Annotations** | ❌ | ✅ `SocketID`, `Environ`, `Auth`, etc. |
 | **Compatibility** | ✅ | ✅ Full backward compatibility |
 
@@ -152,6 +154,40 @@ if __name__ == "__main__":
 ```
 
 ## Advanced Features
+
+### Middlewares for Cross-Cutting Concerns
+
+```python
+from typing import Any
+from fastsio import AsyncServer, BaseMiddleware, auth_middleware, logging_middleware
+
+# Custom authentication middleware
+class AuthMiddleware(BaseMiddleware):
+    def __init__(self):
+        super().__init__(events=["join_room", "send_message"])
+    
+    async def before_event(self, event: str, sid: str, data: Any, environ: dict = None, **kwargs):
+        if not environ or not environ.get("HTTP_AUTHORIZATION"):
+            raise PermissionError("Authentication required")
+        return data
+
+# Create server with middlewares
+sio = AsyncServer(async_mode="asgi")
+
+# Add middlewares with different scopes
+sio.add_middleware(logging_middleware(), global_middleware=True)  # All events
+sio.add_middleware(AuthMiddleware())  # Specific events only
+sio.add_middleware(
+    logging_middleware(), 
+    namespace="/admin", 
+    events=["admin_action"]
+)  # Namespace + event specific
+
+@sio.event
+async def join_room(sid: SocketID, data: dict):
+    # This will go through AuthMiddleware
+    return {"status": "joined"}
+```
 
 ### Routers for Code Organization
 

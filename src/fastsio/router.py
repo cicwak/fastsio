@@ -11,7 +11,6 @@ class RouterSIO:
     attached to a server via ``sio.add_router(router)``.
 
     Example:
-
         router = RouterSIO(namespace="/chat")
 
         @router.on("message")
@@ -74,12 +73,12 @@ class RouterSIO:
                                     # If Pydantic is not available, skip validation
                                     pass
 
-                    setattr(h, "_fastsio_response_model", eff_resp_model)
+                    h._fastsio_response_model = eff_resp_model
                 except Exception:
                     pass
             if channel is not None:
                 try:
-                    setattr(h, "_fastsio_channel_override", channel)
+                    h._fastsio_channel_override = channel
                 except Exception:
                     pass
             self.handlers[ns][event] = h
