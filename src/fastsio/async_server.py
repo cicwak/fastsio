@@ -19,6 +19,7 @@ import engineio
 
 from . import async_manager, base_server, exceptions, packet
 from .types import SocketID, Environ, Auth, Reason, Data, Event
+from .dependency import run_with_context
 
 from pydantic import BaseModel as _PydanticBaseModel
 
@@ -799,7 +800,7 @@ class AsyncServer(base_server.BaseServer):
     async def _trigger_event(
         self, event: str, namespace: Optional[str], *args: Any
     ) -> Any:
-        """Invoke an application event handler."""
+        """Invoke an application event handler using ContextVar-based dependency injection."""
         # Keep originals to support dependency injection from raw payload
         original_args = args
         original_sid: Optional[str] = None
@@ -809,146 +810,45 @@ class AsyncServer(base_server.BaseServer):
         # first see if we have an explicit handler for the event
         handler, args = self._get_event_handler(event, namespace, args)
         if handler:
-            # Build DI kwargs for supported injections, without breaking
-            # positional compatibility.
-            di_kwargs: Dict[str, Any] = {}
-
-            try:
-                sig = inspect.signature(handler)  # type: ignore[arg-type]
-                param_items = list(sig.parameters.items())
-            except (TypeError, ValueError):  # builtins/callables without signature
-                param_items = []
-
-            # Determine which params are already fulfilled positionally
-            positionally_fulfilled_param_names = []
-            for idx, (pname, p) in enumerate(param_items):
-                if idx < len(args) and p.kind in (
-                    inspect.Parameter.POSITIONAL_ONLY,
-                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                ):
-                    positionally_fulfilled_param_names.append(pname)
-
-            # Prepare payload for Pydantic, only for non-reserved events
-            payload_for_model: Any = None
+            # Prepare data for dependency injection
+            payload_data: Any = None
             if event not in base_server.BaseServer.reserved_events:
                 if len(original_args) >= 2:
                     candidate_payload = original_args[1]
                     # Only accept single-argument payload for model injection
                     if len(original_args[1:]) == 1:
-                        payload_for_model = candidate_payload
+                        payload_data = candidate_payload
+                    else:
+                        payload_data = original_args[1]  # Use first data arg if multiple
 
-            # Prepare environ/auth for DI
+            # Prepare environ for DI
             computed_environ: Any = None
             if original_sid is not None:
                 try:
                     computed_environ = self.get_environ(original_sid, namespace)
                 except Exception:
                     computed_environ = None
+
+            # Prepare auth payload for connect events
             connect_auth_payload: Any = None
             if event == "connect" and len(original_args) >= 3:
                 connect_auth_payload = original_args[2]
 
-            for pname, p in param_items:
-                ann = p.annotation
+            # Prepare disconnect reason
+            disconnect_reason: Any = None
+            if event == "disconnect" and len(args) > 0:
+                disconnect_reason = args[-1]
 
-                # Skip if already provided positionally
-                # if pname in positionally_fulfilled_param_names:
-                #     continue
-
-                # Inject AsyncServer by annotation
-                try:
-                    from .async_server import (
-                        AsyncServer as _AsyncServerType,
-                    )  # local import to avoid cycles
-                except Exception:  # pragma: no cover
-                    _AsyncServerType = None  # type: ignore
-
-                if _AsyncServerType is not None and ann is _AsyncServerType:
-                    di_kwargs.setdefault(pname, self)
-                    continue
-
-                # Inject SocketID by annotation
-                if ann is SocketID and original_sid is not None:
-                    di_kwargs.setdefault(pname, original_sid)
-                    continue
-
-                # Inject Environ by annotation
-                if ann is Environ:
-                    di_kwargs.setdefault(pname, computed_environ or {})
-                    continue
-
-                # Inject Auth by annotation (connect event carries auth payload)
-                if ann is Auth:
-                    if event == "connect":
-                        di_kwargs.setdefault(pname, connect_auth_payload or None)
-                    else:
-                        raise ValueError("You can`t use `Auth` not in connect handler")
-                    continue
-
-                if ann is Reason:
-                    if event == "disconnect":
-                        di_kwargs.setdefault(pname, args[-1])
-                    else:
-                        raise ValueError(
-                            "You can`t use `Reason` not in disconnect handler"
-                        )
-                    continue
-
-                if ann is Data:
-                    di_kwargs.setdefault(pname, args[-1])
-                    continue
-
-                if ann is Event:
-                    di_kwargs.setdefault(pname, event)
-                    continue
-
-                try:
-                    is_model = isinstance(ann, type) and issubclass(
-                        ann, _PydanticBaseModel
-                    )  # type: ignore[arg-type]
-                except Exception:
-                    is_model = False
-                if is_model:
-                    if payload_for_model is None:
-                        raise ValueError(
-                            f"Cannot inject Pydantic model '{ann.__name__}': expected a single payload argument"
-                        )
-                    try:
-                        # Pydantic v2: model_validate
-                        if hasattr(ann, "model_validate"):
-                            di_kwargs.setdefault(
-                                pname, ann.model_validate(payload_for_model)
-                            )  # type: ignore[attr-defined]
-                        else:  # Pydantic v1 fallback
-                            di_kwargs.setdefault(
-                                pname, ann.parse_obj(payload_for_model)
-                            )  # type: ignore[attr-defined]
-                    except Exception as exc:  # pragma: no cover - validation error path
-                        raise ValueError(
-                            f"Failed to validate payload for '{ann.__name__}': {exc}"
-                        ) from exc
-
-            if asyncio.iscoroutinefunction(handler):
-                try:
-                    try:
-                        ret = await handler(**di_kwargs)
-                    except TypeError:
-                        # legacy disconnect events use only one argument
-                        if event == "disconnect":
-                            ret = await handler(**di_kwargs)
-                        else:  # pragma: no cover
-                            raise
-                except asyncio.CancelledError:  # pragma: no cover
-                    ret = None
-            else:
-                try:
-                    ret = handler(**di_kwargs)
-                except TypeError:
-                    # legacy disconnect events use only one argument
-                    if event == "disconnect":
-                        ret = handler(**di_kwargs)
-                    else:  # pragma: no cover
-                        raise
+            ret = await run_with_context(
+                handler,
+                socket_id=original_sid,
+                environ=computed_environ,
+                auth=connect_auth_payload if event == "connect" else None,
+                reason=disconnect_reason if event == "disconnect" else None,
+                data=payload_data,
+                event=event,
+                server=self,
+            )
 
             # Validate response if response_model is defined
             ret = self._validate_response(handler, ret)
@@ -958,6 +858,7 @@ class AsyncServer(base_server.BaseServer):
         if handler:
             return await handler.trigger_event(event, *args)
         return self.not_handled
+
 
     async def _handle_eio_connect(self, eio_sid: str, environ: Dict[str, Any]) -> None:  # type: ignore[override]
         """Handle the Engine.IO connection event."""

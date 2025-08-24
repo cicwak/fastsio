@@ -7,5 +7,3 @@ Auth = NewType("Auth", dict)
 Data = Union[dict, str, bytes]
 Reason = NewType("Reason", str)
 Event = NewType("Event", str)
-
-__all__ = ["SocketID", "Environ", "Auth", "Reason", "Data", "Event"]

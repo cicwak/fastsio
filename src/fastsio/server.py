@@ -1,8 +1,11 @@
+import inspect
 import logging
+from typing import Any, Dict, Optional, Tuple
 
 import engineio
 
 from . import base_server, exceptions, packet
+from .dependency import DependencyContext, _resolve_sync_dependencies
 
 default_logger = logging.getLogger("fastsio.server")
 
@@ -689,30 +692,126 @@ class Server(base_server.BaseServer):
         self.logger.info("received ack from %s [%s]", sid, namespace)
         self.manager.trigger_callback(sid, id, data)
 
-    def _trigger_event(self, event, namespace, *args):
-        """Invoke an application event handler."""
+    def _trigger_event(self, event: str, namespace: Optional[str], *args: Any) -> Any:
+        """Invoke an application event handler with ContextVar-based dependency injection."""
+        # Keep originals to support dependency injection from raw payload
+        original_args = args
+        original_sid: Optional[str] = None
+        if original_args and isinstance(original_args[0], str):
+            original_sid = original_args[0]
+
         # first see if we have an explicit handler for the event
         handler, args = self._get_event_handler(event, namespace, args)
         if handler:
-            try:
-                ret = handler(*args)
-                # Validate response if response_model is defined
-                ret = self._validate_response(handler, ret)
-                return ret
-            except TypeError:
-                # legacy disconnect events use only one argument
-                if event == "disconnect":
-                    ret = handler(*args[:-1])
-                    # Validate response if response_model is defined
-                    ret = self._validate_response(handler, ret)
-                    return ret
-                # pragma: no cover
-                raise
+            # Prepare data for dependency injection
+            payload_data: Any = None
+            if event not in base_server.BaseServer.reserved_events:
+                if len(original_args) >= 2:
+                    candidate_payload = original_args[1]
+                    # Only accept single-argument payload for model injection
+                    if len(original_args[1:]) == 1:
+                        payload_data = candidate_payload
+                    else:
+                        payload_data = original_args[1]  # Use first data arg if multiple
+
+            # Prepare environ for DI
+            computed_environ: Any = None
+            if original_sid is not None:
+                try:
+                    computed_environ = self.get_environ(original_sid, namespace)
+                except Exception:
+                    computed_environ = None
+
+            # Prepare auth payload for connect events
+            connect_auth_payload: Any = None
+            if event == "connect" and len(original_args) >= 3:
+                connect_auth_payload = original_args[2]
+
+            # Prepare disconnect reason
+            disconnect_reason: Any = None
+            if event == "disconnect" and len(args) > 0:
+                disconnect_reason = args[-1]
+
+            # Use ContextVar-based dependency injection
+            from .dependency import run_with_context
+            
+            # For sync handlers, we need to handle differently
+            if inspect.iscoroutinefunction(handler):
+                # This shouldn't happen in sync server, but just in case
+                import asyncio
+                try:
+                    loop = asyncio.get_running_loop()
+                    # We can't await in sync context, so this is an error
+                    raise RuntimeError("Async handler in sync server - use AsyncServer instead")
+                except RuntimeError as e:
+                    if "no running event loop" in str(e):
+                        # No loop, create one for this call
+                        ret = asyncio.run(run_with_context(
+                            handler,
+                            socket_id=original_sid,
+                            environ=computed_environ,
+                            auth=connect_auth_payload if event == "connect" else None,
+                            reason=disconnect_reason if event == "disconnect" else None,
+                            data=payload_data,
+                            event=event,
+                            server=self,
+                        ))
+                    else:
+                        raise
+            else:
+                # Sync handler - use sync version of DI
+                ret = self._run_sync_with_context(
+                    handler,
+                    socket_id=original_sid,
+                    environ=computed_environ,
+                    auth=connect_auth_payload if event == "connect" else None,
+                    reason=disconnect_reason if event == "disconnect" else None,
+                    data=payload_data,
+                    event=event,
+                    server=self,
+                )
+
+            # Validate response if response_model is defined
+            ret = self._validate_response(handler, ret)
+            return ret
         # or else, forward the event to a namespace handler if one exists
         handler, args = self._get_namespace_handler(namespace, args)
         if handler:
             return handler.trigger_event(event, *args)
         return self.not_handled
+
+    def _run_sync_with_context(
+        self,
+        func,
+        socket_id: Optional[str] = None,
+        environ: Optional[dict] = None,
+        auth: Optional[dict] = None,
+        reason: Optional[str] = None,
+        data: Any = None,
+        event: Optional[str] = None,
+        server: Any = None,
+        **kwargs
+    ) -> Any:
+        """
+        Run a synchronous function with dependency injection context.
+        
+        This is a simplified version for sync handlers that uses
+        sync dependency resolution.
+        """
+        
+        with DependencyContext(
+            socket_id=socket_id,
+            environ=environ,
+            auth=auth,
+            reason=reason,
+            data=data,
+            event=event,
+            server=server,
+        ):
+            resolved = _resolve_sync_dependencies(func, **kwargs)
+            return func(**resolved)
+
+
 
     def _handle_eio_connect(self, eio_sid, environ):
         """Handle the Engine.IO connection event."""

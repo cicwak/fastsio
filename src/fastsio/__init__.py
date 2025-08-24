@@ -20,6 +20,7 @@ from .tornado import get_tornado_handler
 from .router import RouterSIO
 from .asyncapi import AsyncAPIConfig
 from .types import SocketID, Environ, Auth, Reason, Data, Event
+from .dependency import Depends, register_dependency
 from .zmq_manager import ZmqManager
 
 __all__ = [
@@ -54,4 +55,6 @@ __all__ = [
     "Reason",
     "Data",
     "Event",
+    "Depends",
+    "register_dependency",
 ]
