@@ -1,6 +1,6 @@
 from unittest import mock
 
-from fastsio import async_namespace
+from fastsio import async_namespace, SocketID, Data, Depends
 
 
 class TestAsyncNamespace:
@@ -56,8 +56,8 @@ class TestAsyncNamespace:
         result = {}
 
         class MyNamespace(async_namespace.AsyncNamespace):
-            def on_custom_message(self, sid, data):
-                result["result"] = (sid, data)
+            def on_custom_message(self, socket_id: SocketID, data: Data):
+                result["result"] = (socket_id, data)
 
         ns = MyNamespace("/foo")
         ns._set_server(mock.MagicMock())
@@ -68,8 +68,8 @@ class TestAsyncNamespace:
         result = {}
 
         class MyNamespace(async_namespace.AsyncNamespace):
-            async def on_custom_message(self, sid, data):
-                result["result"] = (sid, data)
+            async def on_custom_message(self, socket_id: SocketID, data: Data):
+                result["result"] = (socket_id, data)
 
         ns = MyNamespace("/foo")
         ns._set_server(mock.MagicMock())
@@ -80,8 +80,8 @@ class TestAsyncNamespace:
         result = {}
 
         class MyNamespace(async_namespace.AsyncNamespace):
-            async def on_custom_message(self, sid, data):
-                result["result"] = (sid, data)
+            async def on_custom_message(self, socket_id: SocketID, data: Data):
+                result["result"] = (socket_id, data)
 
         ns = MyNamespace("/foo")
         ns._set_server(mock.MagicMock())
@@ -297,8 +297,8 @@ class TestAsyncNamespace:
         result = {}
 
         class MyNamespace(async_namespace.AsyncClientNamespace):
-            def on_custom_message(self, sid, data):
-                result["result"] = (sid, data)
+            def on_custom_message(self, socket_id: SocketID, data: Data):
+                result["result"] = (socket_id, data)
 
         ns = MyNamespace("/foo")
         ns._set_client(mock.MagicMock())
@@ -309,8 +309,8 @@ class TestAsyncNamespace:
         result = {}
 
         class MyNamespace(async_namespace.AsyncClientNamespace):
-            async def on_custom_message(self, sid, data):
-                result["result"] = (sid, data)
+            async def on_custom_message(self, socket_id: SocketID, data: Data):
+                result["result"] = (socket_id, data)
 
         ns = MyNamespace("/foo")
         ns._set_client(mock.MagicMock())
@@ -321,8 +321,8 @@ class TestAsyncNamespace:
         result = {}
 
         class MyNamespace(async_namespace.AsyncClientNamespace):
-            async def on_custom_message(self, sid, data):
-                result["result"] = (sid, data)
+            async def on_custom_message(self, socket_id: SocketID, data: Data):
+                result["result"] = (socket_id, data)
 
         ns = MyNamespace("/foo")
         ns._set_client(mock.MagicMock())

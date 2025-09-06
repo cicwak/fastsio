@@ -5,10 +5,9 @@ from unittest import mock
 import pytest
 from engineio import json, packet as eio_packet
 
-from fastsio import async_namespace, async_server, exceptions, namespace, packet
+from fastsio import async_namespace, async_server, exceptions, namespace, packet, SocketID, Data, Depends
 
 
-@pytest.mark.skip(reason="Temporarily disabled, for CI test")
 @mock.patch(
     "fastsio.server.engineio.AsyncServer",
     **{
@@ -697,7 +696,13 @@ class TestAsyncServer:
         s = async_server.AsyncServer(async_handlers=False)
         sid = await s.manager.connect("123", "/")
         handler = mock.MagicMock(return_value="foo")
-        s.on("my message", handler)
+
+        # Use DI for socket ID and data
+        def handler_with_di(socket_id: SocketID, data: Data):
+            handler(socket_id, data)
+            return "foo"
+
+        s.on("my message", handler_with_di)
         await s._handle_eio_message("123", '21000["my message","foo"]')
         handler.assert_called_once_with(sid, "foo")
         s.eio.send.assert_awaited_once_with("123", '31000["foo"]')
@@ -707,7 +712,13 @@ class TestAsyncServer:
         s = async_server.AsyncServer(async_handlers=False)
         await s.manager.connect("123", "/")
         handler = mock.MagicMock(return_value="foo")
-        s.on("my message", handler)
+
+        # Use DI for socket ID and data
+        def handler_with_di(socket_id: SocketID, data: Data):
+            handler(socket_id, data)
+            return "foo"
+
+        s.on("my message", handler_with_di)
         await s._handle_eio_message("123", '21000["another message","foo"]')
         s.eio.send.assert_not_awaited()
 
@@ -716,7 +727,13 @@ class TestAsyncServer:
         s = async_server.AsyncServer(async_handlers=False)
         sid = await s.manager.connect("123", "/")
         handler = mock.MagicMock(return_value=None)
-        s.on("my message", handler)
+
+        # Use DI for socket ID and data
+        def handler_with_di(socket_id: SocketID, data: Data):
+            handler(socket_id, data)
+            return None
+
+        s.on("my message", handler_with_di)
         await s._handle_eio_message("123", '21000["my message","foo"]')
         handler.assert_called_once_with(sid, "foo")
         s.eio.send.assert_awaited_once_with("123", "31000[]")
@@ -726,7 +743,13 @@ class TestAsyncServer:
         s = async_server.AsyncServer(async_handlers=False)
         sid = await s.manager.connect("123", "/")
         handler = mock.MagicMock(return_value=(1, "2", True))
-        s.on("my message", handler)
+
+        # Use DI for socket ID and data
+        def handler_with_di(socket_id: SocketID, data: Data):
+            handler(socket_id, *data)
+            return (1, "2", True)
+
+        s.on("my message", handler_with_di)
         await s._handle_eio_message("123", '21000["my message","a","b","c"]')
         handler.assert_called_once_with(sid, "a", "b", "c")
         s.eio.send.assert_awaited_once_with("123", '31000[1,"2",true]')
@@ -736,7 +759,13 @@ class TestAsyncServer:
         s = async_server.AsyncServer(async_handlers=False)
         sid = await s.manager.connect("123", "/")
         handler = mock.MagicMock(return_value=[1, "2", True])
-        s.on("my message", handler)
+
+        # Use DI for socket ID and data
+        def handler_with_di(socket_id: SocketID, data: Data):
+            handler(socket_id, *data)
+            return [1, "2", True]
+
+        s.on("my message", handler_with_di)
         await s._handle_eio_message("123", '21000["my message","a","b","c"]')
         handler.assert_called_once_with(sid, "a", "b", "c")
         s.eio.send.assert_awaited_once_with("123", '31000[[1,"2",true]]')
@@ -746,7 +775,13 @@ class TestAsyncServer:
         s = async_server.AsyncServer(async_handlers=False)
         sid = await s.manager.connect("123", "/")
         handler = mock.MagicMock(return_value=b"foo")
-        s.on("my message", handler)
+
+        # Use DI for socket ID and data
+        def handler_with_di(socket_id: SocketID, data: Data):
+            handler(socket_id, data)
+            return b"foo"
+
+        s.on("my message", handler_with_di)
         await s._handle_eio_message("123", '21000["my message","foo"]')
         handler.assert_any_call(sid, "foo")
 

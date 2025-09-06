@@ -24,7 +24,7 @@ Creating a Server Instance
 
 A Socket.IO server is an instance of class :class:`fastsio.Server`::
 
-    import fastsio as socketio
+    import fastsio
 
     # create a Socket.IO server
     sio = fastsio.Server()
@@ -32,7 +32,7 @@ A Socket.IO server is an instance of class :class:`fastsio.Server`::
 For asyncio based servers, the :class:`fastsio.AsyncServer` class provides
 the same functionality, but in a coroutine friendly format::
 
-    import fastsio as socketio
+    import fastsio
 
     # create a Socket.IO server
     sio = fastsio.AsyncServer()
@@ -619,9 +619,9 @@ is disabled by default. To enable it, call the
 :func:`instrument() <socketio.Server.instrument>` method. For example::
 
     import os
-    import fastsio as socketio
+    import fastsio
 
-    sio = socketio.Server(cors_allowed_origins=[
+    sio = fastsio.Server(cors_allowed_origins=[
         'http://localhost:5000',
         'https://admin.socket.io',
     ])
@@ -645,13 +645,13 @@ Debugging and Troubleshooting
 To help you debug issues, the server can be configured to output logs to the
 terminal::
 
-    import fastsio as socketio
+    import fastsio
 
     # standard Python
-    sio = socketio.Server(logger=True, engineio_logger=True)
+    sio = fastsio.Server(logger=True, engineio_logger=True)
 
     # asyncio
-    sio = socketio.AsyncServer(logger=True, engineio_logger=True)
+    sio = fastsio.AsyncServer(logger=True, engineio_logger=True)
 
 The ``logger`` argument controls logging related to the Socket.IO protocol,
 while ``engineio_logger`` controls logs that originate in the low-level
