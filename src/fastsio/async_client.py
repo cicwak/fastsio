@@ -1,4 +1,6 @@
 import asyncio
+import inspect
+from contextlib import suppress
 import logging
 import random
 
@@ -68,6 +70,18 @@ class AsyncClient(base_client.BaseClient):
 
     def is_asyncio_based(self):
         return True
+
+    def __del__(self):  # pragma: no cover
+        # Ensure any stored coroutine isn't left un-awaited to avoid warnings
+        try:
+            for value in list(getattr(self, "__dict__", {}).values()):
+                if inspect.iscoroutine(value):
+                    try:
+                        value.close()  # type: ignore[attr-defined]
+                    except Exception:
+                        pass
+        except Exception:
+            pass
 
     async def connect(
         self,
@@ -177,7 +191,16 @@ class AsyncClient(base_client.BaseClient):
         if wait:
             try:
                 while True:
-                    await asyncio.wait_for(self._connect_event.wait(), wait_timeout)
+                    wait_coro = self._connect_event.wait()
+                    try:
+                        await asyncio.wait_for(wait_coro, wait_timeout)
+                    except asyncio.TimeoutError:
+                        # Close un-awaited coroutine to avoid warnings when wait_for is mocked
+                        try:
+                            wait_coro.close()  # type: ignore[attr-defined]
+                        except Exception:
+                            pass
+                        raise
                     self._connect_event.clear()
                     if set(self.namespaces) == set(self.connection_namespaces):
                         break
@@ -527,10 +550,16 @@ class AsyncClient(base_client.BaseClient):
             self.logger.info(f"Connection failed, new attempt in {delay:.02f} seconds")
             abort = False
             try:
-                await asyncio.wait_for(self._reconnect_abort.wait(), delay)
-                abort = True
-            except asyncio.TimeoutError:
-                pass
+                wait_coro = self._reconnect_abort.wait()
+                try:
+                    await asyncio.wait_for(wait_coro, delay)
+                    abort = True
+                except asyncio.TimeoutError:
+                    # Close un-awaited coroutine to avoid warnings when wait_for is mocked
+                    try:
+                        wait_coro.close()  # type: ignore[attr-defined]
+                    except Exception:
+                        pass
             except asyncio.CancelledError:  # pragma: no cover
                 abort = True
             if abort:

@@ -649,9 +649,13 @@ class Server(base_server.BaseServer):
         if not self.manager.is_connected(sid, namespace):  # pragma: no cover
             return
         self.manager.pre_disconnect(sid, namespace=namespace)
-        self._trigger_event(
-            "disconnect", namespace, sid, reason or self.reason.CLIENT_DISCONNECT
-        )
+        try:
+            self._trigger_event(
+                "disconnect", namespace, sid, reason or self.reason.CLIENT_DISCONNECT
+            )
+        except TypeError:
+            # Fall back to legacy disconnect handler signature without reason
+            self._trigger_event("disconnect", namespace, sid)
         self.manager.disconnect(sid, namespace, ignore_queue=True)
 
     def _handle_event(self, eio_sid, namespace, id, data):
@@ -712,9 +716,9 @@ class Server(base_server.BaseServer):
                     if len(original_args[1:]) == 1:
                         payload_data = candidate_payload
                     else:
-                        payload_data = original_args[
-                            1
-                        ]  # Use first data arg if multiple
+                        payload_data = list(
+                            original_args[1:]
+                        )  # Provide full args list for DI when multiple
 
             # Prepare environ for DI
             computed_environ: Any = None
@@ -753,6 +757,57 @@ class Server(base_server.BaseServer):
             else:
                 # Use ContextVar-based dependency injection
                 from .dependency import run_with_context
+                from .types import (
+                    Auth as _AuthType,
+                    Data as _DataType,
+                    Environ as _EnvironType,
+                    Event as _EventType,
+                    Reason as _ReasonType,
+                    SocketID as _SocketIDType,
+                )
+
+                def _uses_di(fn: Any) -> bool:
+                    try:
+                        sig_local = inspect.signature(fn)
+                    except Exception:
+                        return False
+                    try:
+                        from .dependency import Depends as _Depends  # type: ignore
+                    except Exception:
+                        _Depends = None  # type: ignore
+                    try:
+                        from pydantic import BaseModel as _PydanticBaseModel  # type: ignore
+                    except Exception:
+                        _PydanticBaseModel = None  # type: ignore
+                    for _p in sig_local.parameters.values():
+                        # Heuristic by parameter name commonly used with DI
+                        if _p.name in {"socket_id", "environ", "auth", "reason", "data", "event"}:
+                            return True
+                        if (
+                            _p.default is not inspect._empty
+                            and _Depends is not None
+                            and isinstance(_p.default, _Depends)
+                        ):
+                            return True
+                        ann = _p.annotation
+                        if ann in (
+                            _SocketIDType,
+                            _EnvironType,
+                            _AuthType,
+                            _ReasonType,
+                            _DataType,
+                            _EventType,
+                        ):
+                            return True
+                        if (
+                            _PydanticBaseModel is not None
+                            and isinstance(ann, type)
+                            and issubclass(ann, _PydanticBaseModel)
+                        ):
+                            return True
+                    return False
+
+                di_mode = _uses_di(handler)
 
                 # For sync handlers, we need to handle differently
                 if inspect.iscoroutinefunction(handler):
@@ -771,6 +826,7 @@ class Server(base_server.BaseServer):
                             ret = asyncio.run(
                                 run_with_context(
                                     handler,
+                                    *(args if not di_mode else ()),
                                     socket_id=original_sid,
                                     environ=computed_environ,
                                     auth=connect_auth_payload
@@ -790,6 +846,7 @@ class Server(base_server.BaseServer):
                     # Sync handler - use sync version of DI
                     ret = self._run_sync_with_context(
                         handler,
+                        *(args if not di_mode else ()),
                         socket_id=original_sid,
                         environ=computed_environ,
                         auth=connect_auth_payload if event == "connect" else None,
@@ -811,6 +868,7 @@ class Server(base_server.BaseServer):
     def _run_sync_with_context(
         self,
         func,
+        *args: Any,
         socket_id: Optional[str] = None,
         environ: Optional[dict] = None,
         auth: Optional[dict] = None,
@@ -834,8 +892,21 @@ class Server(base_server.BaseServer):
             event=event,
             server=server,
         ):
+            sig = inspect.signature(func)
             resolved = _resolve_sync_dependencies(func, **kwargs)
-            return func(**resolved)
+            # Remove resolved entries that will be satisfied by positional args
+            consumed = 0
+            for name, param in sig.parameters.items():
+                if param.kind in (
+                    inspect.Parameter.POSITIONAL_ONLY,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                ) and consumed < len(args):
+                    if name in resolved:
+                        resolved.pop(name)
+                    consumed += 1
+                elif param.kind == inspect.Parameter.VAR_POSITIONAL:
+                    break
+            return func(*args, **resolved)
 
     def _handle_eio_connect(self, eio_sid, environ):
         """Handle the Engine.IO connection event."""
