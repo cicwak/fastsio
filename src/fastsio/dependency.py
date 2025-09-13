@@ -259,6 +259,7 @@ async def resolve_dependencies(func: Callable, **explicit_kwargs) -> Dict[str, A
 
 async def run_with_context(
     func: Callable,
+    *args: Any,
     socket_id: Optional[str] = None,
     environ: Optional[dict] = None,
     auth: Optional[dict] = None,
@@ -266,7 +267,7 @@ async def run_with_context(
     data: Any = None,
     event: Optional[str] = None,
     server: Any = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> Any:
     """Run a function with dependency injection context.
 
@@ -282,9 +283,24 @@ async def run_with_context(
             event=event,
             server=server,
         ):
+            # Resolve dependencies and avoid duplicates for positionals
+            sig = inspect.signature(func)
             resolved = await resolve_dependencies(func, **kwargs)
             resolved.update(kwargs)  # Explicit kwargs take precedence
-            return await func(**resolved)
+            # Remove any resolved entries that are satisfied by positional args
+            consumed = 0
+            for name, param in sig.parameters.items():
+                if param.kind in (
+                    inspect.Parameter.POSITIONAL_ONLY,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                ) and consumed < len(args):
+                    if name in resolved:
+                        resolved.pop(name)
+                    consumed += 1
+                elif param.kind == inspect.Parameter.VAR_POSITIONAL:
+                    # *args collects remaining positionals; stop consuming by name
+                    break
+            return await func(*args, **resolved)
     else:
         # Create a new context and run the sync function
         ctx = copy_context()
@@ -299,9 +315,21 @@ async def run_with_context(
                 event=event,
                 server=server,
             ):
+                sig = inspect.signature(func)
                 resolved = _resolve_sync_dependencies(func, **kwargs)
                 resolved.update(kwargs)
-                return func(**resolved)
+                consumed = 0
+                for name, param in sig.parameters.items():
+                    if param.kind in (
+                        inspect.Parameter.POSITIONAL_ONLY,
+                        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    ) and consumed < len(args):
+                        if name in resolved:
+                            resolved.pop(name)
+                        consumed += 1
+                    elif param.kind == inspect.Parameter.VAR_POSITIONAL:
+                        break
+                return func(*args, **resolved)
 
         return ctx.run(_sync_run)
 

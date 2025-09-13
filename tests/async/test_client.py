@@ -7,7 +7,6 @@ from engineio import exceptions as engineio_exceptions
 from fastsio import async_client, async_namespace, exceptions, packet
 
 
-@pytest.mark.skip(reason="Temporarily disabled, for CI test")
 class TestAsyncClient:
     async def test_is_asyncio_based(self):
         c = async_client.AsyncClient()
@@ -1113,7 +1112,7 @@ class TestAsyncClient:
         c._trigger_event.assert_any_await(
             "disconnect", "/bar", c.reason.CLIENT_DISCONNECT
         )
-        c._trigger_event.asserT_any_await("disconnect", "/", c.reason.CLIENT_DISCONNECT)
+        await c._trigger_event.asserT_any_await("disconnect", "/", c.reason.CLIENT_DISCONNECT)
         assert c.sid is None
         assert not c.connected
 
