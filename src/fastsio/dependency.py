@@ -7,7 +7,7 @@ using Python's ContextVar for managing request-scoped dependencies.
 import asyncio
 import inspect
 from contextvars import ContextVar, copy_context
-from typing import Any, Callable, Dict, Optional, TypeVar
+from typing import Any, Callable, Dict, Optional, TypeVar, Union, get_args, get_origin
 
 from .types import Auth, Data, Environ, Event, Reason, SocketID
 
@@ -167,26 +167,26 @@ async def resolve_dependencies(func: Callable, **explicit_kwargs) -> Dict[str, A
                 resolved[param_name] = Environ(environ)
             continue
 
-        if annotation is Auth:
+        # Auth: available only in connect. Inject None if not provided by client.
+        if annotation is Auth or (
+            get_origin(annotation) is Union and Auth in get_args(annotation)
+        ):
+            current_event = _event.get()
+            if current_event != "connect":
+                raise ValueError("Auth is only available in connect handler")
             auth = _auth.get()
-            if auth is not None:
-                resolved[param_name] = Auth(auth)
-            else:
-                # Auth is only available in connect handler
-                current_event = _event.get()
-                if current_event != "connect":
-                    raise ValueError("Auth is only available in connect handler")
+            resolved[param_name] = Auth(auth) if auth is not None else None
             continue
 
-        if annotation is Reason:
+        # Reason: available only in disconnect. Inject None if absent.
+        if annotation is Reason or (
+            get_origin(annotation) is Union and Reason in get_args(annotation)
+        ):
+            current_event = _event.get()
+            if current_event != "disconnect":
+                raise ValueError("Reason is only available in disconnect handler")
             reason = _reason.get()
-            if reason is not None:
-                resolved[param_name] = Reason(reason)
-            else:
-                # Reason is only available in disconnect handler
-                current_event = _event.get()
-                if current_event != "disconnect":
-                    raise ValueError("Reason is only available in disconnect handler")
+            resolved[param_name] = Reason(reason) if reason is not None else None
             continue
 
         if annotation is Data:
@@ -356,16 +356,18 @@ def _resolve_sync_dependencies(func: Callable, **explicit_kwargs) -> Dict[str, A
                 resolved[param_name] = Environ(environ)
             continue
 
-        if annotation is Auth:
+        if annotation is Auth or (
+            get_origin(annotation) is Union and Auth in get_args(annotation)
+        ):
             auth = _auth.get()
-            if auth is not None:
-                resolved[param_name] = Auth(auth)
+            resolved[param_name] = Auth(auth) if auth is not None else None
             continue
 
-        if annotation is Reason:
+        if annotation is Reason or (
+            get_origin(annotation) is Union and Reason in get_args(annotation)
+        ):
             reason = _reason.get()
-            if reason is not None:
-                resolved[param_name] = Reason(reason)
+            resolved[param_name] = Reason(reason) if reason is not None else None
             continue
 
         if annotation is Data:
