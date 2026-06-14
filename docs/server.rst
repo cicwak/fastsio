@@ -287,36 +287,6 @@ remaining arguments are the same as for a regular event handler.
 Note that the ``connect`` and ``disconnect`` events have to be defined
 explicitly and are not invoked on a catch-all event handler.
 
-Exception Handlers
-~~~~~~~~~~~~~~~~~~
-
-Applications can register exception handlers for errors raised by regular
-event handlers. Exception handlers follow the same dependency injection rules
-as event handlers, so they can receive the server instance, the client
-``sid`` and the exception object::
-
-    class UnicornException(Exception):
-        def __init__(self, name: str):
-            self.name = name
-
-    @sio.exception_handler(UnicornException)
-    async def unicorn_exception_handler(
-        sio: AsyncServer,
-        sid: SocketID,
-        exc: UnicornException,
-    ):
-        await sio.emit("error", {"name": exc.name}, to=sid)
-
-Exception handlers are selected by exception class. Subclasses are supported,
-and the most specific registered exception class is used. If an event handler
-has an acknowledgement callback, the value returned by the exception handler is
-sent as the acknowledgement response.
-
-The ``connect``, ``disconnect`` and ``ping`` system events are not intercepted
-by exception handlers. Use the normal connection rejection flow for
-``connect`` handlers, such as returning ``False`` or raising
-``ConnectionRefusedError``.
-
 Emitting Events to Clients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

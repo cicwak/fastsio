@@ -1,5 +1,5 @@
 import copy
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from . import base_namespace
 
@@ -26,7 +26,6 @@ class RouterSIO:
         self.default_namespace: str = namespace or "/"
         # Decorator-based function handlers: {namespace: {event: handler}}
         self.handlers: Dict[str, Dict[str, Callable[..., Any]]] = {}
-        self.exception_handlers: Dict[Type[BaseException], Callable[..., Any]] = {}
         # Class-based namespace handlers to be registered on the server
         self._namespace_handlers: List[base_namespace.BaseServerNamespace] = []
         # Child routers that inherit this router's default namespace.
@@ -107,23 +106,6 @@ class RouterSIO:
 
         return set_handler
 
-    def exception_handler(
-        self, exception_class: Type[BaseException]
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """Register a router-level exception handler."""
-        if not isinstance(exception_class, type) or not issubclass(
-            exception_class, BaseException
-        ):
-            raise ValueError(
-                "Exception handler must be registered for an exception class"
-            )
-
-        def set_handler(handler: Callable[..., Any]) -> Callable[..., Any]:
-            self.exception_handlers[exception_class] = handler
-            return handler
-
-        return set_handler
-
     def register_namespace(
         self, namespace_handler: base_namespace.BaseServerNamespace
     ) -> None:
@@ -148,55 +130,21 @@ class RouterSIO:
             self.add_router(router)
 
     # Internal helpers used by the server when attaching the router
-    def iter_function_handlers(
-        self,
-    ) -> List[
-        Tuple[
-            str,
-            str,
-            Callable[..., Any],
-            Dict[Type[BaseException], Callable[..., Any]],
-        ]
-    ]:
-        return self._iter_function_handlers("/", {})
+    def iter_function_handlers(self) -> List[Tuple[str, str, Callable[..., Any]]]:
+        return self._iter_function_handlers("/")
 
     def _iter_function_handlers(
-        self,
-        namespace_prefix: str,
-        parent_exception_handlers: Dict[Type[BaseException], Callable[..., Any]],
-    ) -> List[
-        Tuple[
-            str,
-            str,
-            Callable[..., Any],
-            Dict[Type[BaseException], Callable[..., Any]],
-        ]
-    ]:
-        out: List[
-            Tuple[
-                str,
-                str,
-                Callable[..., Any],
-                Dict[Type[BaseException], Callable[..., Any]],
-            ]
-        ] = []
-        exception_handlers = {
-            **parent_exception_handlers,
-            **self.exception_handlers,
-        }
+        self, namespace_prefix: str
+    ) -> List[Tuple[str, str, Callable[..., Any]]]:
+        out: List[Tuple[str, str, Callable[..., Any]]] = []
         for ns, events in self.handlers.items():
             for event, handler in events.items():
                 out.append(
-                    (
-                        self._compose_namespace(namespace_prefix, ns),
-                        event,
-                        handler,
-                        exception_handlers.copy(),
-                    )
+                    (self._compose_namespace(namespace_prefix, ns), event, handler)
                 )
         child_prefix = self._compose_namespace(namespace_prefix, self.default_namespace)
         for router in self._routers:
-            out.extend(router._iter_function_handlers(child_prefix, exception_handlers))
+            out.extend(router._iter_function_handlers(child_prefix))
         return out
 
     def iter_namespace_handlers(self) -> List[base_namespace.BaseServerNamespace]:

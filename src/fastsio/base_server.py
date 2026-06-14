@@ -1,17 +1,7 @@
 import logging
 
 # pyright: reportMissingImports=false
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from .middlewares import BaseMiddleware
@@ -83,10 +73,6 @@ class BaseServer:
 
         self.environ: Dict[str, Dict[str, Any]] = {}
         self.handlers: Dict[str, Dict[str, Callable[..., Any]]] = {}
-        self.exception_handlers: Dict[Type[BaseException], Callable[..., Any]] = {}
-        self.handler_exception_handlers: Dict[
-            str, Dict[str, Dict[Type[BaseException], Callable[..., Any]]]
-        ] = {}
         self.namespace_handlers: Dict[str, base_namespace.BaseServerNamespace] = {}
         self.not_handled: object = object()
 
@@ -269,28 +255,6 @@ class BaseServer:
 
         return set_handler
 
-    def exception_handler(
-        self, exception_class: Type[BaseException]
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """Register a server-level exception handler.
-
-        Exception handlers catch exceptions raised by regular application
-        events. System events such as ``connect`` and ``disconnect`` are not
-        intercepted.
-        """
-        if not isinstance(exception_class, type) or not issubclass(
-            exception_class, BaseException
-        ):
-            raise ValueError(
-                "Exception handler must be registered for an exception class"
-            )
-
-        def set_handler(handler: Callable[..., Any]) -> Callable[..., Any]:
-            self.exception_handlers[exception_class] = handler
-            return handler
-
-        return set_handler
-
     def register_namespace(
         self, namespace_handler: base_namespace.BaseServerNamespace
     ) -> None:
@@ -315,13 +279,9 @@ class BaseServer:
         class-based namespace handlers contained in the router.
         """
         # function-based
-        for ns, event, handler, exception_handlers in router.iter_function_handlers():
+        for ns, event, handler in router.iter_function_handlers():
             if ns not in self.handlers:
                 self.handlers[ns] = {}
-            if exception_handlers:
-                if ns not in self.handler_exception_handlers:
-                    self.handler_exception_handlers[ns] = {}
-                self.handler_exception_handlers[ns][event] = exception_handlers
             self.handlers[ns][event] = handler
         # class-based namespaces
         for ns_handler in router.iter_namespace_handlers():
@@ -370,11 +330,7 @@ class BaseServer:
 
     def _get_event_handler(
         self, event: str, namespace: Optional[str], args: Tuple[Any, ...]
-    ) -> Tuple[
-        Optional[Callable[..., Any]],
-        Tuple[Any, ...],
-        Optional[Dict[Type[BaseException], Callable[..., Any]]],
-    ]:
+    ) -> Tuple[Optional[Callable[..., Any]], Tuple[Any, ...]]:
         # Return the appropriate application event handler
         #
         # Resolution priority:
@@ -383,35 +339,20 @@ class BaseServer:
         # - self.handlers["*"][event]
         # - self.handlers["*"]["*"]
         handler: Optional[Callable[..., Any]] = None
-        exception_handlers: Optional[
-            Dict[Type[BaseException], Callable[..., Any]]
-        ] = None
         if namespace in self.handlers:
             if event in self.handlers[namespace]:
                 handler = self.handlers[namespace][event]
-                exception_handlers = self.handler_exception_handlers.get(
-                    namespace, {}
-                ).get(event)
             elif event not in self.reserved_events and "*" in self.handlers[namespace]:
                 handler = self.handlers[namespace]["*"]
-                exception_handlers = self.handler_exception_handlers.get(
-                    namespace, {}
-                ).get("*")
                 args = (event, *args)
         if handler is None and "*" in self.handlers:
             if event in self.handlers["*"]:
                 handler = self.handlers["*"][event]
-                exception_handlers = self.handler_exception_handlers.get("*", {}).get(
-                    event
-                )
                 args = (namespace, *args)
             elif event not in self.reserved_events and "*" in self.handlers["*"]:
                 handler = self.handlers["*"]["*"]
-                exception_handlers = self.handler_exception_handlers.get("*", {}).get(
-                    "*"
-                )
                 args = (event, namespace, *args)
-        return handler, args, exception_handlers
+        return handler, args
 
     def _get_namespace_handler(
         self, namespace: Optional[str], args: Tuple[Any, ...]
@@ -517,26 +458,6 @@ class BaseServer:
                 raise ValueError(f"Failed to validate response data: {exc}") from exc
 
         return response
-
-    def _get_exception_handler(
-        self,
-        exc: BaseException,
-        local_handlers: Optional[Dict[Type[BaseException], Callable[..., Any]]] = None,
-    ) -> Optional[Callable[..., Any]]:
-        if local_handlers:
-            for cls in type(exc).__mro__:
-                handler = local_handlers.get(cls)
-                if handler is not None:
-                    return handler
-
-        for cls in type(exc).__mro__:
-            handler = self.exception_handlers.get(cls)
-            if handler is not None:
-                return handler
-        return None
-
-    def _is_exception_handled_event(self, event: str) -> bool:
-        return event not in {*self.reserved_events, "ping"}
 
     def _handle_eio_connect(self) -> None:  # pragma: no cover
         raise NotImplementedError
