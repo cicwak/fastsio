@@ -4,7 +4,17 @@ from unittest import mock
 import pytest
 from engineio import json, packet as eio_packet
 
-from fastsio import exceptions, msgpack_packet, namespace, packet, server, SocketID, Data, Depends
+from fastsio import (
+    Data,
+    Depends,
+    RouterSIO,
+    SocketID,
+    exceptions,
+    msgpack_packet,
+    namespace,
+    packet,
+    server,
+)
 
 
 @mock.patch(
@@ -67,6 +77,125 @@ class TestServer:
         assert s.handlers["/"]["foo"] == foo
         assert s.handlers["/"]["bar"] == bar
         assert s.handlers["/foo"]["disconnect"] == disconnect
+
+    def test_add_nested_router(self, eio):
+        s = server.Server()
+        parent = RouterSIO(namespace="/api")
+        child = RouterSIO(namespace="/chat")
+
+        @child.on("message")
+        def message():
+            pass
+
+        parent.add_router(child)
+        s.add_router(parent)
+
+        assert s.handlers["/api/chat"]["message"] == message
+
+    def test_add_nested_router_with_explicit_namespace(self, eio):
+        s = server.Server()
+        parent = RouterSIO(namespace="/api")
+        child = RouterSIO(namespace="/chat")
+
+        @child.on("connect", namespace="/room")
+        def connect():
+            pass
+
+        parent.add_router(child)
+        s.add_router(parent)
+
+        assert s.handlers["/api/room"]["connect"] == connect
+
+    def test_add_multi_level_nested_router(self, eio):
+        s = server.Server()
+        root = RouterSIO(namespace="/api")
+        parent = RouterSIO(namespace="/v1")
+        child = RouterSIO(namespace="/chat")
+
+        @child.on("message")
+        def message():
+            pass
+
+        parent.add_router(child)
+        root.add_router(parent)
+        s.add_router(root)
+
+        assert s.handlers["/api/v1/chat"]["message"] == message
+
+    def test_nested_router_add_routers(self, eio):
+        s = server.Server()
+        parent = RouterSIO(namespace="/api")
+        chat = RouterSIO(namespace="/chat")
+        admin = RouterSIO(namespace="/admin")
+
+        @chat.on("message")
+        def message():
+            pass
+
+        @admin.on("stats")
+        def stats():
+            pass
+
+        parent.add_routers(chat, admin)
+        s.add_router(parent)
+
+        assert s.handlers["/api/chat"]["message"] == message
+        assert s.handlers["/api/admin"]["stats"] == stats
+
+    def test_nested_router_preserves_handler_metadata(self, eio):
+        s = server.Server()
+        parent = RouterSIO(namespace="/api")
+        child = RouterSIO(namespace="/chat")
+
+        @child.on("message", response_model=str, channel="custom/channel")
+        def message():
+            pass
+
+        parent.add_router(child)
+        s.add_router(parent)
+
+        handler = s.handlers["/api/chat"]["message"]
+        assert handler == message
+        assert handler._fastsio_response_model is str
+        assert handler._fastsio_channel_override == "custom/channel"
+
+    def test_nested_router_prefixes_namespace_handlers(self, eio):
+        class MyNamespace(namespace.Namespace):
+            pass
+
+        s = server.Server()
+        parent = RouterSIO(namespace="/api")
+        child = RouterSIO(namespace="/chat")
+        ns = MyNamespace(namespace="/room")
+
+        child.register_namespace(ns)
+        parent.add_router(child)
+        s.add_router(parent)
+
+        assert "/api/room" in s.namespace_handlers
+        assert s.namespace_handlers["/api/room"] is not ns
+        assert s.namespace_handlers["/api/room"].namespace == "/api/room"
+        assert ns.namespace == "/room"
+
+    def test_nested_router_namespace_identity_and_catchall(self, eio):
+        s = server.Server()
+        parent = RouterSIO(namespace="/api/")
+        root_child = RouterSIO(namespace="/")
+        catchall_child = RouterSIO(namespace="*")
+
+        @root_child.on("message")
+        def message():
+            pass
+
+        @catchall_child.on("event")
+        def event():
+            pass
+
+        parent.add_routers(root_child, catchall_child)
+        s.add_router(parent)
+
+        assert s.handlers["/api"]["message"] == message
+        assert s.handlers["*"]["event"] == event
 
     def test_emit(self, eio):
         mgr = mock.MagicMock()
