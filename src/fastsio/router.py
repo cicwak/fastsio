@@ -1,3 +1,4 @@
+import copy
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from . import base_namespace
@@ -27,6 +28,8 @@ class RouterSIO:
         self.handlers: Dict[str, Dict[str, Callable[..., Any]]] = {}
         # Class-based namespace handlers to be registered on the server
         self._namespace_handlers: List[base_namespace.BaseServerNamespace] = []
+        # Child routers that inherit this router's default namespace.
+        self._routers: List["RouterSIO"] = []
 
     # Public API mirrors Server.on
     def on(
@@ -115,13 +118,68 @@ class RouterSIO:
             raise ValueError("Not a namespace instance")
         self._namespace_handlers.append(namespace_handler)
 
+    def add_router(self, router: "RouterSIO") -> None:
+        """Include another router under this router's default namespace."""
+        if not isinstance(router, RouterSIO):
+            raise ValueError("Not a router instance")
+        self._routers.append(router)
+
+    def add_routers(self, *routers: "RouterSIO") -> None:
+        """Include multiple routers under this router's default namespace."""
+        for router in routers:
+            self.add_router(router)
+
     # Internal helpers used by the server when attaching the router
     def iter_function_handlers(self) -> List[Tuple[str, str, Callable[..., Any]]]:
+        return self._iter_function_handlers("/")
+
+    def _iter_function_handlers(
+        self, namespace_prefix: str
+    ) -> List[Tuple[str, str, Callable[..., Any]]]:
         out: List[Tuple[str, str, Callable[..., Any]]] = []
         for ns, events in self.handlers.items():
             for event, handler in events.items():
-                out.append((ns, event, handler))
+                out.append(
+                    (self._compose_namespace(namespace_prefix, ns), event, handler)
+                )
+        child_prefix = self._compose_namespace(namespace_prefix, self.default_namespace)
+        for router in self._routers:
+            out.extend(router._iter_function_handlers(child_prefix))
         return out
 
     def iter_namespace_handlers(self) -> List[base_namespace.BaseServerNamespace]:
-        return list(self._namespace_handlers)
+        return self._iter_namespace_handlers("/")
+
+    def _iter_namespace_handlers(
+        self, namespace_prefix: str
+    ) -> List[base_namespace.BaseServerNamespace]:
+        out: List[base_namespace.BaseServerNamespace] = []
+        for namespace_handler in self._namespace_handlers:
+            namespace = str(namespace_handler.namespace or "/")
+            composed_namespace = self._compose_namespace(
+                namespace_prefix, namespace
+            )
+            if composed_namespace == namespace:
+                out.append(namespace_handler)
+            else:
+                prefixed_handler = copy.copy(namespace_handler)
+                prefixed_handler.namespace = composed_namespace
+                out.append(prefixed_handler)
+        child_prefix = self._compose_namespace(namespace_prefix, self.default_namespace)
+        for router in self._routers:
+            out.extend(router._iter_namespace_handlers(child_prefix))
+        return out
+
+    @staticmethod
+    def _compose_namespace(prefix: str, namespace: str) -> str:
+        if prefix == "*" or namespace == "*":
+            return "*"
+        prefix = prefix or "/"
+        namespace = namespace or "/"
+        if prefix == "/":
+            combined = namespace
+        elif namespace == "/":
+            combined = prefix
+        else:
+            combined = f"{prefix.rstrip('/')}/{namespace.lstrip('/')}"
+        return "/" + "/".join(part for part in combined.split("/") if part)
