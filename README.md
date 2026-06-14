@@ -9,6 +9,7 @@
 - **Strong typing** and **FastAPI-like DX** with dependency injection
 - **Automatic validation** of data through Pydantic models
 - **Lightweight routers** for code organization via `RouterSIO`
+- **Exception handlers** on servers and routers
 - **Flexible middleware system** for authentication, logging, rate limiting, and more
 - **Compatibility** with existing ASGI/WSGI stacks
 - **Full support** for the Socket.IO protocol
@@ -28,6 +29,7 @@ pip install fastsio
 | **Dependency Injection** | ❌ | ✅ FastAPI-style |
 | **Pydantic Validation** | ❌ | ✅ Automatic |
 | **Routers** | ❌ | ✅ RouterSIO for code organization |
+| **Exception Handlers** | ❌ | ✅ Server and router scopes |
 | **Middlewares** | ❌ | ✅ Flexible middleware system |
 | **Parameter Annotations** | ❌ | ✅ `SocketID`, `Environ`, `Auth`, etc. |
 | **Compatibility** | ✅ | ✅ Full backward compatibility |
@@ -124,6 +126,25 @@ sio = AsyncServer(async_mode="asgi", cors_allowed_origins="*")
 sio.add_router(router)
 
 app = ASGIApp(sio)
+```
+
+### Exception Handlers
+
+```python
+class RoomClosed(Exception):
+    pass
+
+@router.exception_handler(RoomClosed)
+async def room_closed_handler(
+    sio: AsyncServer,
+    sid: SocketID,
+    exc: RoomClosed,
+):
+    await sio.emit("error", {"message": "room closed"}, to=sid)
+
+@router.on("message")
+async def message():
+    raise RoomClosed()
 ```
 
 ### FastAPI Integration

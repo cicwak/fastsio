@@ -705,7 +705,9 @@ class Server(base_server.BaseServer):
             original_sid = original_args[0]
 
         # first see if we have an explicit handler for the event
-        handler, args = self._get_event_handler(event, namespace, args)
+        handler, args, local_exception_handlers = self._get_event_handler(
+            event, namespace, args
+        )
         if handler:
             # Prepare data for dependency injection
             payload_data: Any = None
@@ -738,115 +740,163 @@ class Server(base_server.BaseServer):
             if event == "disconnect" and len(args) > 0:
                 disconnect_reason = args[-1]
 
-            # Execute middleware chain if middlewares are registered
-            if (
-                hasattr(self, "_middleware_chain")
-                and self._middleware_chain.middlewares
-            ):
-                # Use middleware chain for execution
-                ret = self._middleware_chain.execute(
-                    event=event,
-                    sid=original_sid or "",
-                    data=payload_data,
-                    handler=handler,
-                    namespace=namespace,
-                    environ=computed_environ,
-                    auth=connect_auth_payload if event == "connect" else None,
-                    server=self,
-                )
-            else:
-                # Use ContextVar-based dependency injection
-                from .dependency import run_with_context
-                from .types import (
-                    Auth as _AuthType,
-                    Data as _DataType,
-                    Environ as _EnvironType,
-                    Event as _EventType,
-                    Reason as _ReasonType,
-                    SocketID as _SocketIDType,
-                )
+            try:
+                # Execute middleware chain if middlewares are registered
+                if (
+                    hasattr(self, "_middleware_chain")
+                    and self._middleware_chain.middlewares
+                ):
+                    # Use middleware chain for execution
+                    ret = self._middleware_chain.execute(
+                        event=event,
+                        sid=original_sid or "",
+                        data=payload_data,
+                        handler=handler,
+                        namespace=namespace,
+                        environ=computed_environ,
+                        auth=connect_auth_payload if event == "connect" else None,
+                        server=self,
+                    )
+                else:
+                    # Use ContextVar-based dependency injection
+                    from .dependency import run_with_context
+                    from .types import (
+                        Auth as _AuthType,
+                        Data as _DataType,
+                        Environ as _EnvironType,
+                        Event as _EventType,
+                        Reason as _ReasonType,
+                        SocketID as _SocketIDType,
+                    )
 
-                def _uses_di(fn: Any) -> bool:
-                    try:
-                        sig_local = inspect.signature(fn)
-                    except Exception:
+                    def _uses_di(fn: Any) -> bool:
+                        try:
+                            sig_local = inspect.signature(fn)
+                        except Exception:
+                            return False
+                        try:
+                            from .dependency import Depends as _Depends  # type: ignore
+                        except Exception:
+                            _Depends = None  # type: ignore
+                        try:
+                            from pydantic import (  # type: ignore
+                                BaseModel as _PydanticBaseModel,
+                            )
+                        except Exception:
+                            _PydanticBaseModel = None  # type: ignore
+                        for _p in sig_local.parameters.values():
+                            # Heuristic by parameter name commonly used with DI
+                            if _p.name in {
+                                "socket_id",
+                                "environ",
+                                "auth",
+                                "reason",
+                                "data",
+                                "event",
+                            }:
+                                return True
+                            if (
+                                _p.default is not inspect._empty
+                                and _Depends is not None
+                                and isinstance(_p.default, _Depends)
+                            ):
+                                return True
+                            ann = _p.annotation
+                            if ann in (
+                                _SocketIDType,
+                                _EnvironType,
+                                _AuthType,
+                                _ReasonType,
+                                _DataType,
+                                _EventType,
+                            ):
+                                return True
+                            if (
+                                _PydanticBaseModel is not None
+                                and isinstance(ann, type)
+                                and issubclass(ann, _PydanticBaseModel)
+                            ):
+                                return True
                         return False
-                    try:
-                        from .dependency import Depends as _Depends  # type: ignore
-                    except Exception:
-                        _Depends = None  # type: ignore
-                    try:
-                        from pydantic import BaseModel as _PydanticBaseModel  # type: ignore
-                    except Exception:
-                        _PydanticBaseModel = None  # type: ignore
-                    for _p in sig_local.parameters.values():
-                        # Heuristic by parameter name commonly used with DI
-                        if _p.name in {"socket_id", "environ", "auth", "reason", "data", "event"}:
-                            return True
-                        if (
-                            _p.default is not inspect._empty
-                            and _Depends is not None
-                            and isinstance(_p.default, _Depends)
-                        ):
-                            return True
-                        ann = _p.annotation
-                        if ann in (
-                            _SocketIDType,
-                            _EnvironType,
-                            _AuthType,
-                            _ReasonType,
-                            _DataType,
-                            _EventType,
-                        ):
-                            return True
-                        if (
-                            _PydanticBaseModel is not None
-                            and isinstance(ann, type)
-                            and issubclass(ann, _PydanticBaseModel)
-                        ):
-                            return True
-                    return False
 
-                di_mode = _uses_di(handler)
+                    di_mode = _uses_di(handler)
 
-                # For sync handlers, we need to handle differently
-                if inspect.iscoroutinefunction(handler):
-                    # This shouldn't happen in sync server, but just in case
+                    # For sync handlers, we need to handle differently
+                    if inspect.iscoroutinefunction(handler):
+                        # This shouldn't happen in sync server, but just in case
+                        import asyncio
+
+                        try:
+                            asyncio.get_running_loop()
+                            # We can't await in sync context, so this is an error
+                            raise RuntimeError(
+                                "Async handler in sync server - use AsyncServer instead"
+                            )
+                        except RuntimeError as e:
+                            if "no running event loop" in str(e):
+                                # No loop, create one for this call
+                                ret = asyncio.run(
+                                    run_with_context(
+                                        handler,
+                                        *(args if not di_mode else ()),
+                                        socket_id=original_sid,
+                                        environ=computed_environ,
+                                        auth=connect_auth_payload
+                                        if event == "connect"
+                                        else None,
+                                        reason=disconnect_reason
+                                        if event == "disconnect"
+                                        else None,
+                                        data=payload_data,
+                                        event=event,
+                                        server=self,
+                                    )
+                                )
+                            else:
+                                raise
+                    else:
+                        # Sync handler - use sync version of DI
+                        ret = self._run_sync_with_context(
+                            handler,
+                            *(args if not di_mode else ()),
+                            socket_id=original_sid,
+                            environ=computed_environ,
+                            auth=connect_auth_payload if event == "connect" else None,
+                            reason=disconnect_reason if event == "disconnect" else None,
+                            data=payload_data,
+                            event=event,
+                            server=self,
+                        )
+
+                # Validate response if response_model is defined
+                ret = self._validate_response(handler, ret)
+            except BaseException as exc:
+                if not self._is_exception_handled_event(event):
+                    raise
+                exception_handler = self._get_exception_handler(
+                    exc, local_exception_handlers
+                )
+                if exception_handler is None:
+                    raise
+                if inspect.iscoroutinefunction(exception_handler):
                     import asyncio
 
-                    try:
-                        loop = asyncio.get_running_loop()
-                        # We can't await in sync context, so this is an error
-                        raise RuntimeError(
-                            "Async handler in sync server - use AsyncServer instead"
+                    ret = asyncio.run(
+                        run_with_context(
+                            exception_handler,
+                            socket_id=original_sid,
+                            environ=computed_environ,
+                            auth=connect_auth_payload if event == "connect" else None,
+                            reason=disconnect_reason if event == "disconnect" else None,
+                            data=payload_data,
+                            event=event,
+                            server=self,
+                            exc=exc,
                         )
-                    except RuntimeError as e:
-                        if "no running event loop" in str(e):
-                            # No loop, create one for this call
-                            ret = asyncio.run(
-                                run_with_context(
-                                    handler,
-                                    *(args if not di_mode else ()),
-                                    socket_id=original_sid,
-                                    environ=computed_environ,
-                                    auth=connect_auth_payload
-                                    if event == "connect"
-                                    else None,
-                                    reason=disconnect_reason
-                                    if event == "disconnect"
-                                    else None,
-                                    data=payload_data,
-                                    event=event,
-                                    server=self,
-                                )
-                            )
-                        else:
-                            raise
+                    )
                 else:
-                    # Sync handler - use sync version of DI
                     ret = self._run_sync_with_context(
-                        handler,
-                        *(args if not di_mode else ()),
+                        exception_handler,
                         socket_id=original_sid,
                         environ=computed_environ,
                         auth=connect_auth_payload if event == "connect" else None,
@@ -854,15 +904,61 @@ class Server(base_server.BaseServer):
                         data=payload_data,
                         event=event,
                         server=self,
+                        exc=exc,
                     )
-
-            # Validate response if response_model is defined
-            ret = self._validate_response(handler, ret)
             return ret
         # or else, forward the event to a namespace handler if one exists
         handler, args = self._get_namespace_handler(namespace, args)
         if handler:
-            return handler.trigger_event(event, *args)
+            try:
+                return handler.trigger_event(event, *args)
+            except BaseException as exc:
+                if not self._is_exception_handled_event(event):
+                    raise
+                exception_handler = self._get_exception_handler(exc)
+                if exception_handler is None:
+                    raise
+
+                payload_data: Any = None
+                if event not in base_server.BaseServer.reserved_events:
+                    if len(original_args) >= 2:
+                        if len(original_args[1:]) == 1:
+                            payload_data = original_args[1]
+                        else:
+                            payload_data = list(original_args[1:])
+
+                computed_environ: Any = None
+                if original_sid is not None:
+                    try:
+                        computed_environ = self.get_environ(original_sid, namespace)
+                    except Exception:
+                        computed_environ = None
+
+                if inspect.iscoroutinefunction(exception_handler):
+                    import asyncio
+
+                    from .dependency import run_with_context
+
+                    return asyncio.run(
+                        run_with_context(
+                            exception_handler,
+                            socket_id=original_sid,
+                            environ=computed_environ,
+                            data=payload_data,
+                            event=event,
+                            server=self,
+                            exc=exc,
+                        )
+                    )
+                return self._run_sync_with_context(
+                    exception_handler,
+                    socket_id=original_sid,
+                    environ=computed_environ,
+                    data=payload_data,
+                    event=event,
+                    server=self,
+                    exc=exc,
+                )
         return self.not_handled
 
     def _run_sync_with_context(
