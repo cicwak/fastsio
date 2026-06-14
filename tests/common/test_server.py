@@ -197,6 +197,237 @@ class TestServer:
         assert s.handlers["/api"]["message"] == message
         assert s.handlers["*"]["event"] == event
 
+    def test_exception_handler(self, eio):
+        class UnicornException(Exception):
+            def __init__(self, name):
+                self.name = name
+
+        s = server.Server()
+
+        @s.on("boom")
+        def boom(sid):
+            raise UnicornException("spark")
+
+        @s.exception_handler(UnicornException)
+        def handle_unicorn(sio: server.Server, sid: SocketID, exc: UnicornException):
+            assert sio is s
+            return {"sid": sid, "name": exc.name}
+
+        assert s._trigger_event("boom", "/", "1") == {"sid": "1", "name": "spark"}
+
+    def test_router_exception_handler_only_applies_to_router(self, eio):
+        class UnicornException(Exception):
+            pass
+
+        s = server.Server()
+        handled_router = RouterSIO()
+        unhandled_router = RouterSIO()
+
+        @handled_router.on("handled")
+        def handled(sid):
+            raise UnicornException()
+
+        @unhandled_router.on("unhandled")
+        def unhandled(sid):
+            raise UnicornException()
+
+        @handled_router.exception_handler(UnicornException)
+        def handle_unicorn(exc: UnicornException):
+            return "router"
+
+        s.add_routers(handled_router, unhandled_router)
+
+        assert s._trigger_event("handled", "/", "1") == "router"
+        with pytest.raises(UnicornException):
+            s._trigger_event("unhandled", "/", "1")
+
+    def test_router_exception_handlers_are_route_scoped(self, eio):
+        class UnicornException(Exception):
+            pass
+
+        s = server.Server()
+        first_router = RouterSIO(namespace="/first")
+        second_router = RouterSIO(namespace="/second")
+
+        def shared_handler(sid):
+            raise UnicornException()
+
+        first_router.on("boom", shared_handler)
+        second_router.on("boom", shared_handler)
+
+        @first_router.exception_handler(UnicornException)
+        def first_handler(exc: UnicornException):
+            return "first"
+
+        @second_router.exception_handler(UnicornException)
+        def second_handler(exc: UnicornException):
+            return "second"
+
+        s.add_routers(first_router, second_router)
+
+        assert s._trigger_event("boom", "/first", "1") == "first"
+        assert s._trigger_event("boom", "/second", "1") == "second"
+
+    def test_router_exception_handler_precedes_server_handler(self, eio):
+        class UnicornException(Exception):
+            pass
+
+        s = server.Server()
+        router = RouterSIO()
+
+        @router.on("boom")
+        def boom(sid):
+            raise UnicornException()
+
+        @s.exception_handler(UnicornException)
+        def server_handler(exc: UnicornException):
+            return "server"
+
+        @router.exception_handler(Exception)
+        def router_handler(exc: Exception):
+            return "router"
+
+        s.add_router(router)
+
+        assert s._trigger_event("boom", "/", "1") == "router"
+
+    def test_exception_handler_uses_most_specific_exception_class(self, eio):
+        class AppException(Exception):
+            pass
+
+        class UnicornException(AppException):
+            pass
+
+        s = server.Server()
+
+        @s.on("boom")
+        def boom(sid):
+            raise UnicornException()
+
+        @s.exception_handler(AppException)
+        def app_handler(exc: AppException):
+            return "app"
+
+        @s.exception_handler(UnicornException)
+        def unicorn_handler(exc: UnicornException):
+            return "unicorn"
+
+        assert s._trigger_event("boom", "/", "1") == "unicorn"
+
+    def test_unregistered_exception_is_reraised(self, eio):
+        class UnicornException(Exception):
+            pass
+
+        s = server.Server()
+
+        @s.on("boom")
+        def boom(sid):
+            raise UnicornException()
+
+        with pytest.raises(UnicornException):
+            s._trigger_event("boom", "/", "1")
+
+    def test_server_exception_handler_catches_namespace_handler(self, eio):
+        class UnicornException(Exception):
+            pass
+
+        class MyNamespace(namespace.Namespace):
+            def on_boom(self, sid):
+                raise UnicornException()
+
+        s = server.Server()
+        s.register_namespace(MyNamespace("/chat"))
+
+        @s.exception_handler(UnicornException)
+        def handle_unicorn(exc: UnicornException):
+            return "namespace"
+
+        assert s._trigger_event("boom", "/chat", "1") == "namespace"
+
+    def test_exception_handler_does_not_catch_system_events(self, eio):
+        class UnicornException(Exception):
+            pass
+
+        s = server.Server()
+
+        @s.exception_handler(UnicornException)
+        def handler(exc: UnicornException):
+            return "handled"
+
+        @s.on("connect")
+        def connect(sid):
+            raise UnicornException()
+
+        @s.on("disconnect")
+        def disconnect(sid):
+            raise UnicornException()
+
+        with pytest.raises(UnicornException):
+            s._trigger_event("connect", "/", "1")
+        with pytest.raises(UnicornException):
+            s._trigger_event("disconnect", "/", "1")
+
+    def test_exception_handler_ack_response(self, eio):
+        class UnicornException(Exception):
+            pass
+
+        s = server.Server(async_handlers=False)
+        s.manager.connect("123", "/")
+
+        @s.on("my message")
+        def handler(sid, payload):
+            raise UnicornException()
+
+        @s.exception_handler(UnicornException)
+        def handle_unicorn(exc: UnicornException):
+            return "handled"
+
+        s._handle_eio_message("123", '21000["my message","foo"]')
+
+        s.eio.send.assert_called_once_with("123", '31000["handled"]')
+
+    def test_nested_router_exception_handlers_inherit_and_override(self, eio):
+        class UnicornException(Exception):
+            pass
+
+        s = server.Server()
+        parent = RouterSIO(namespace="/api")
+        child = RouterSIO(namespace="/chat")
+
+        @child.on("boom")
+        def boom(sid):
+            raise UnicornException()
+
+        @parent.exception_handler(UnicornException)
+        def parent_handler(exc: UnicornException):
+            return "parent"
+
+        parent.add_router(child)
+        s.add_router(parent)
+
+        assert s._trigger_event("boom", "/api/chat", "1") == "parent"
+
+        s = server.Server()
+        parent = RouterSIO(namespace="/api")
+        child = RouterSIO(namespace="/chat")
+
+        @child.on("boom")
+        def boom_override(sid):
+            raise UnicornException()
+
+        @parent.exception_handler(UnicornException)
+        def parent_handler_override(exc: UnicornException):
+            return "parent"
+
+        @child.exception_handler(UnicornException)
+        def child_handler(exc: UnicornException):
+            return "child"
+
+        parent.add_router(child)
+        s.add_router(parent)
+
+        assert s._trigger_event("boom", "/api/chat", "1") == "child"
+
     def test_emit(self, eio):
         mgr = mock.MagicMock()
         s = server.Server(client_manager=mgr)
