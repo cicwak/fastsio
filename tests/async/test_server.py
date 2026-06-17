@@ -2,8 +2,10 @@ import asyncio
 import logging
 from unittest import mock
 
+import msgspec
 import pytest
 from engineio import json, packet as eio_packet
+from pydantic import BaseModel
 
 from fastsio import (
     Data,
@@ -13,9 +15,11 @@ from fastsio import (
     async_namespace,
     async_server,
     exceptions,
+    msgpack_packet,
     namespace,
     packet,
 )
+from fastsio.dependency import DependencyContext, resolve_dependencies
 
 
 @mock.patch(
@@ -1277,6 +1281,101 @@ class TestAsyncServer:
     async def test_engineio_logger(self, eio):
         async_server.AsyncServer(engineio_logger="foo")
         eio.assert_called_once_with(**{"logger": "foo", "async_handlers": False})
+
+    async def test_msgpack(self, eio):
+        s = async_server.AsyncServer(serializer="msgpack")
+        assert s.packet_class == msgpack_packet.MsgPackPacket
+
+    async def test_msgpack_pydantic_payload_injection(self, eio):
+        eio.return_value.send = mock.AsyncMock()
+
+        class User(BaseModel):
+            name: str
+            groups: set[str] = set()
+            email: str | None = None
+
+        s = async_server.AsyncServer(serializer="msgpack", async_handlers=False)
+        await s.manager.connect("123", "/")
+        handler = mock.MagicMock()
+
+        @s.on("user")
+        def on_user(user: User):
+            handler(user)
+
+        pkt = msgpack_packet.MsgPackPacket(
+            packet.EVENT,
+            data=["user", {"name": "alice", "groups": ["admin"]}],
+        )
+        await s._handle_eio_message("123", pkt.encode())
+
+        handler.assert_called_once()
+        user = handler.call_args.args[0]
+        assert isinstance(user, User)
+        assert user.name == "alice"
+        assert user.groups == {"admin"}
+        assert user.email is None
+
+    async def test_msgpack_msgspec_payload_injection(self, eio):
+        eio.return_value.send = mock.AsyncMock()
+
+        class User(msgspec.Struct):
+            name: str
+            groups: set[str] = set()
+            email: str | None = None
+
+        s = async_server.AsyncServer(serializer="msgpack", async_handlers=False)
+        await s.manager.connect("123", "/")
+        handler = mock.MagicMock()
+
+        @s.on("user")
+        def on_user(user: User):
+            handler(user)
+
+        pkt = msgpack_packet.MsgPackPacket(
+            packet.EVENT,
+            data=["user", {"name": "alice", "groups": ["admin"]}],
+        )
+        await s._handle_eio_message("123", pkt.encode())
+
+        handler.assert_called_once_with(
+            User(name="alice", groups={"admin"}, email=None)
+        )
+
+    async def test_msgpack_invalid_msgspec_payload(self, eio):
+        eio.return_value.send = mock.AsyncMock()
+
+        class User(msgspec.Struct):
+            name: str
+            groups: set[str] = set()
+
+        s = async_server.AsyncServer(serializer="msgpack", async_handlers=False)
+        await s.manager.connect("123", "/")
+        handler = mock.MagicMock()
+
+        @s.on("user")
+        def on_user(user: User):
+            handler(user)
+
+        pkt = msgpack_packet.MsgPackPacket(
+            packet.EVENT,
+            data=["user", {"name": 123, "groups": ["admin"]}],
+        )
+        with pytest.raises(ValueError, match="Failed to validate payload for 'User'"):
+            await s._handle_eio_message("123", pkt.encode())
+        handler.assert_not_called()
+
+    async def test_async_dependency_msgspec_struct(self, eio):
+        class User(msgspec.Struct):
+            name: str
+            groups: set[str] = set()
+
+        async def handler(user: User):
+            return user
+
+        with DependencyContext(data={"name": "alice", "groups": ["admin"]}):
+            resolved = await resolve_dependencies(handler)
+
+        assert resolved == {"user": User(name="alice", groups={"admin"})}
 
     async def test_custom_json(self, eio):
         # Warning: this test cannot run in parallel with other tests, as it

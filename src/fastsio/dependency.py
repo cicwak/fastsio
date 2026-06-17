@@ -44,6 +44,50 @@ class Depends:
         self._cache_key = f"_dep_cache_{id(dependency)}"
 
 
+def is_pydantic_model(annotation: Any) -> bool:
+    try:
+        from pydantic import BaseModel as _PydanticBaseModel
+
+        return isinstance(annotation, type) and issubclass(
+            annotation, _PydanticBaseModel
+        )
+    except ImportError:
+        return False
+
+
+def validate_pydantic_model(annotation: Any, data: Any) -> Any:
+    if hasattr(annotation, "model_validate"):
+        return annotation.model_validate(data)
+    return annotation.parse_obj(data)
+
+
+def is_msgspec_struct(annotation: Any) -> bool:
+    try:
+        import msgspec
+
+        return isinstance(annotation, type) and issubclass(annotation, msgspec.Struct)
+    except ImportError:
+        return False
+
+
+def validate_msgspec_struct(annotation: Any, data: Any) -> Any:
+    import msgspec
+
+    return msgspec.convert(data, type=annotation)
+
+
+def is_payload_model(annotation: Any) -> bool:
+    return is_pydantic_model(annotation) or is_msgspec_struct(annotation)
+
+
+def validate_payload_model(annotation: Any, data: Any) -> Any:
+    if is_pydantic_model(annotation):
+        return validate_pydantic_model(annotation, data)
+    if is_msgspec_struct(annotation):
+        return validate_msgspec_struct(annotation, data)
+    return data
+
+
 def register_dependency(name: str, factory: Callable) -> None:
     """Register a global dependency factory."""
     _dependency_registry[name] = factory
@@ -225,29 +269,16 @@ async def resolve_dependencies(func: Callable, **explicit_kwargs) -> Dict[str, A
                 resolved[param_name] = server
             continue
 
-        # Handle Pydantic models
-        try:
-            from pydantic import BaseModel as _PydanticBaseModel
-
-            is_pydantic = isinstance(annotation, type) and issubclass(
-                annotation, _PydanticBaseModel
-            )
-        except ImportError:
-            is_pydantic = False
-
-        if is_pydantic:
+        # Handle typed payload models
+        if is_payload_model(annotation):
             data = _data.get()
             if data is None:
                 raise ValueError(
-                    f"Cannot inject Pydantic model '{annotation.__name__}': no data available"
+                    f"Cannot inject model '{annotation.__name__}': no data available"
                 )
 
             try:
-                # Pydantic v2: model_validate
-                if hasattr(annotation, "model_validate"):
-                    resolved[param_name] = annotation.model_validate(data)
-                else:  # Pydantic v1 fallback
-                    resolved[param_name] = annotation.parse_obj(data)
+                resolved[param_name] = validate_payload_model(annotation, data)
             except Exception as exc:
                 raise ValueError(
                     f"Failed to validate payload for '{annotation.__name__}': {exc}"
@@ -434,29 +465,16 @@ def _resolve_sync_dependencies(func: Callable, **explicit_kwargs) -> Dict[str, A
                 resolved[param_name] = server
             continue
 
-        # Handle Pydantic models
-        try:
-            from pydantic import BaseModel as _PydanticBaseModel
-
-            is_pydantic = isinstance(annotation, type) and issubclass(
-                annotation, _PydanticBaseModel
-            )
-        except ImportError:
-            is_pydantic = False
-
-        if is_pydantic:
+        # Handle typed payload models
+        if is_payload_model(annotation):
             data = _data.get()
             if data is None:
                 raise ValueError(
-                    f"Cannot inject Pydantic model '{annotation.__name__}': no data available"
+                    f"Cannot inject model '{annotation.__name__}': no data available"
                 )
 
             try:
-                # Pydantic v2: model_validate
-                if hasattr(annotation, "model_validate"):
-                    resolved[param_name] = annotation.model_validate(data)
-                else:  # Pydantic v1 fallback
-                    resolved[param_name] = annotation.parse_obj(data)
+                resolved[param_name] = validate_payload_model(annotation, data)
             except Exception as exc:
                 raise ValueError(
                     f"Failed to validate payload for '{annotation.__name__}': {exc}"

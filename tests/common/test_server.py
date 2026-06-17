@@ -1,8 +1,10 @@
 import logging
 from unittest import mock
 
+import msgspec
 import pytest
 from engineio import json, packet as eio_packet
+from pydantic import BaseModel
 
 from fastsio import (
     Data,
@@ -15,6 +17,8 @@ from fastsio import (
     packet,
     server,
 )
+from fastsio.asyncapi import AsyncAPIConfig, AsyncAPIGenerator
+from fastsio.dependency import DependencyContext, _resolve_sync_dependencies
 
 
 @mock.patch(
@@ -1327,6 +1331,142 @@ class TestServer:
     def test_msgpack(self, eio):
         s = server.Server(serializer="msgpack")
         assert s.packet_class == msgpack_packet.MsgPackPacket
+
+    def test_msgpack_pydantic_payload_injection(self, eio):
+        class User(BaseModel):
+            name: str
+            groups: set[str] = set()
+            email: str | None = None
+
+        s = server.Server(serializer="msgpack", async_handlers=False)
+        s.manager.connect("123", "/")
+        handler = mock.MagicMock()
+
+        @s.on("user")
+        def on_user(user: User):
+            handler(user)
+
+        pkt = msgpack_packet.MsgPackPacket(
+            packet.EVENT,
+            data=["user", {"name": "alice", "groups": ["admin"]}],
+        )
+        s._handle_eio_message("123", pkt.encode())
+
+        handler.assert_called_once()
+        user = handler.call_args.args[0]
+        assert isinstance(user, User)
+        assert user.name == "alice"
+        assert user.groups == {"admin"}
+        assert user.email is None
+
+    def test_msgpack_msgspec_payload_injection(self, eio):
+        class User(msgspec.Struct):
+            name: str
+            groups: set[str] = set()
+            email: str | None = None
+
+        s = server.Server(serializer="msgpack", async_handlers=False)
+        s.manager.connect("123", "/")
+        handler = mock.MagicMock()
+
+        @s.on("user")
+        def on_user(user: User):
+            handler(user)
+
+        pkt = msgpack_packet.MsgPackPacket(
+            packet.EVENT,
+            data=["user", {"name": "alice", "groups": ["admin"]}],
+        )
+        s._handle_eio_message("123", pkt.encode())
+
+        handler.assert_called_once_with(
+            User(name="alice", groups={"admin"}, email=None)
+        )
+
+    def test_msgpack_invalid_msgspec_payload(self, eio):
+        class User(msgspec.Struct):
+            name: str
+            groups: set[str] = set()
+
+        s = server.Server(serializer="msgpack", async_handlers=False)
+        s.manager.connect("123", "/")
+        handler = mock.MagicMock()
+
+        @s.on("user")
+        def on_user(user: User):
+            handler(user)
+
+        pkt = msgpack_packet.MsgPackPacket(
+            packet.EVENT,
+            data=["user", {"name": 123, "groups": ["admin"]}],
+        )
+        with pytest.raises(ValueError, match="Failed to validate payload for 'User'"):
+            s._handle_eio_message("123", pkt.encode())
+        handler.assert_not_called()
+
+    def test_sync_dependency_msgspec_struct(self, eio):
+        class User(msgspec.Struct):
+            name: str
+            groups: set[str] = set()
+
+        def handler(user: User):
+            return user
+
+        with DependencyContext(data={"name": "alice", "groups": ["admin"]}):
+            resolved = _resolve_sync_dependencies(handler)
+
+        assert resolved == {"user": User(name="alice", groups={"admin"})}
+
+    def test_msgspec_response_model(self, eio):
+        class Reply(msgspec.Struct):
+            ok: bool
+            count: int
+
+        s = server.Server()
+
+        @s.on("reply", response_model=Reply)
+        def reply():
+            return {"ok": True, "count": 2}
+
+        assert s._validate_response(reply, {"ok": True, "count": 2}) == Reply(
+            ok=True, count=2
+        )
+
+    def test_msgspec_response_model_dict(self, eio):
+        class Reply(msgspec.Struct):
+            ok: bool
+            count: int
+
+        s = server.Server()
+
+        @s.on("reply", response_model={"reply.done": Reply})
+        def reply():
+            return "reply.done", {"ok": True, "count": 2}, "extra"
+
+        assert s._validate_response(
+            reply, ("reply.done", {"ok": True, "count": 2}, "extra")
+        ) == ("reply.done", Reply(ok=True, count=2), "extra")
+
+    def test_asyncapi_msgspec_payload_schema(self, eio):
+        class User(msgspec.Struct):
+            name: str
+            groups: set[str] = set()
+
+        s = server.Server()
+
+        @s.on("user")
+        def on_user(user: User):
+            return None
+
+        doc = AsyncAPIGenerator(AsyncAPIConfig()).generate(s)
+
+        payload = doc["channels"]["user"]["messages"]["userRequest"]["payload"]
+        assert payload == {"$ref": "#/components/schemas/User"}
+        assert doc["components"]["schemas"]["User"]["title"] == "User"
+        assert (
+            doc["components"]["schemas"]["User"]["properties"]["groups"]["default"]
+            == []
+        )
 
     def test_custom_serializer(self, eio):
         class CustomPacket(packet.Packet):

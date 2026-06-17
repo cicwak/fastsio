@@ -5,7 +5,11 @@ from typing import Any, Optional
 import engineio
 
 from . import base_server, exceptions, packet
-from .dependency import DependencyContext, _resolve_sync_dependencies
+from .dependency import (
+    DependencyContext,
+    _resolve_sync_dependencies,
+    is_payload_model,
+)
 
 default_logger = logging.getLogger("fastsio.server")
 
@@ -778,12 +782,6 @@ class Server(base_server.BaseServer):
                             from .dependency import Depends as _Depends  # type: ignore
                         except Exception:
                             _Depends = None  # type: ignore
-                        try:
-                            from pydantic import (  # type: ignore
-                                BaseModel as _PydanticBaseModel,
-                            )
-                        except Exception:
-                            _PydanticBaseModel = None  # type: ignore
                         for _p in sig_local.parameters.values():
                             # Heuristic by parameter name commonly used with DI
                             if _p.name in {
@@ -811,11 +809,7 @@ class Server(base_server.BaseServer):
                                 _EventType,
                             ):
                                 return True
-                            if (
-                                _PydanticBaseModel is not None
-                                and isinstance(ann, type)
-                                and issubclass(ann, _PydanticBaseModel)
-                            ):
+                            if is_payload_model(ann):
                                 return True
                         return False
 
