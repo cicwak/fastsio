@@ -19,7 +19,7 @@ Why fastsio vs python-socketio and FastAPI?
 -------------------------------------------
 
 - fastsio builds on the same protocol foundations as python-socketio, but aims for:
-  - **strong typing** and a **FastAPI-like DX** (dependency injection, Pydantic validation)
+  - **strong typing** and a **FastAPI-like DX** (dependency injection, Pydantic/msgspec validation)
   - **lightweight router** organization via ``RouterSIO``
   - minimal overhead and compatibility with your existing ASGI/WSGI stack
 - If you already like FastAPI’s ergonomics, fastsio brings a similar style to Socket.IO:
@@ -28,10 +28,10 @@ Why fastsio vs python-socketio and FastAPI?
 Quick comparison to FastAPI-style handlers
 ------------------------------------------
 
-- **Dependency injection**: annotate with ``AsyncServer``, ``SocketID``, ``Environ``, ``Auth``, your Pydantic models
+- **Dependency injection**: annotate with ``AsyncServer``, ``SocketID``, ``Environ``, ``Auth``, your Pydantic models or ``msgspec.Struct`` classes
   and fastsio injects/validates them automatically.
 - **Routers**: structure your handlers using ``RouterSIO``, similar to FastAPI’s routers.
-- **Validation**: single-argument payloads can be validated into Pydantic models automatically.
+- **Validation**: single-argument payloads can be validated into typed models automatically.
 
 Version compatibility
 ---------------------

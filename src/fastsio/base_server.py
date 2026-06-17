@@ -20,6 +20,7 @@ import engineio
 
 from . import base_namespace, manager, packet
 from .asyncapi import AsyncAPIConfig
+from .dependency import is_payload_model, validate_payload_model_to_builtins
 from .router import RouterSIO
 
 default_logger = logging.getLogger("fastsio.server")
@@ -193,28 +194,18 @@ class BaseServer:
                 try:
                     # Validate response_model structure
                     if isinstance(response_model, dict):
-                        # Validate that all values are Pydantic models or valid types
+                        # Validate that all values are supported payload models or valid types
                         for event_name, model in response_model.items():
                             if not isinstance(event_name, str):
                                 raise ValueError(
                                     f"response_model keys must be strings, got {type(event_name)}"
                                 )
-                            # Check if it's a Pydantic model (basic check)
+                            # Check if it's a supported payload model (basic check)
                             if hasattr(model, "__bases__"):
-                                try:
-                                    # Import Pydantic BaseModel locally to avoid import issues
-                                    from pydantic import BaseModel as _PydanticBaseModel
-
-                                    if not (
-                                        isinstance(model, type)
-                                        and issubclass(model, _PydanticBaseModel)
-                                    ):
-                                        raise ValueError(
-                                            f"response_model['{event_name}'] must be a Pydantic BaseModel, got {type(model)}"
-                                        )
-                                except ImportError:
-                                    # If Pydantic is not available, skip validation
-                                    pass
+                                if not is_payload_model(model):
+                                    raise ValueError(
+                                        f"response_model['{event_name}'] must be a supported payload model, got {type(model)}"
+                                    )
 
                     handler._fastsio_response_model = response_model
                 except Exception:
@@ -458,32 +449,11 @@ class BaseServer:
 
             # Validate data against the model
             try:
-                # Import Pydantic BaseModel locally to avoid import issues
-                from pydantic import BaseModel as _PydanticBaseModel
-
-                if isinstance(model, type) and issubclass(model, _PydanticBaseModel):
-                    # Validate using Pydantic
-                    if hasattr(model, "model_validate"):
-                        # Pydantic v2
-                        if isinstance(data, model):
-                            validated_data = data
-                        else:
-                            validated_data = model.model_validate(data)
-                    else:
-                        # Pydantic v1 fallback
-                        if isinstance(data, model):
-                            validated_data = data
-                        else:
-                            validated_data = model.parse_obj(data)  # type: ignore[attr-defined]
-
-                    # Return the tuple with validated data
+                if is_payload_model(model):
+                    validated_data = validate_payload_model_to_builtins(model, data)
                     return (event_name, validated_data) + extra_args
-                # Not a Pydantic model, return as is
                 return response
 
-            except ImportError:
-                # Pydantic not available, skip validation
-                return response
             except Exception as exc:
                 raise ValueError(
                     f"Failed to validate response data for event '{event_name}': {exc}"
@@ -492,27 +462,10 @@ class BaseServer:
         else:
             # Single response model (existing behavior)
             try:
-                from pydantic import BaseModel as _PydanticBaseModel
-
-                if isinstance(response_model, type) and issubclass(
-                    response_model, _PydanticBaseModel
-                ):
-                    # Validate using Pydantic
-                    if hasattr(response_model, "model_validate"):
-                        # Pydantic v2
-                        if isinstance(response, response_model):
-                            return response
-                        return response_model.model_validate(response)
-                    # Pydantic v1 fallback
-                    if isinstance(response, response_model):
-                        return response
-                    return response_model.parse_obj(response)  # type: ignore[attr-defined]
-                # Not a Pydantic model, return as is
+                if is_payload_model(response_model):
+                    return validate_payload_model_to_builtins(response_model, response)
                 return response
 
-            except ImportError:
-                # Pydantic not available, skip validation
-                return response
             except Exception as exc:
                 raise ValueError(f"Failed to validate response data: {exc}") from exc
 

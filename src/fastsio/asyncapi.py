@@ -4,6 +4,8 @@ import inspect
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple, Union, get_args, get_origin
 
+from .dependency import is_msgspec_struct
+
 try:  # pragma: no cover - optional
     from pydantic import BaseModel as _PydanticBaseModel  # type: ignore
 except Exception:  # pragma: no cover - pydantic optional for type checking only
@@ -277,6 +279,20 @@ class AsyncAPIGenerator:
             Event,
         )
 
+    def _rewrite_msgspec_refs(self, schema: Any) -> Any:
+        if isinstance(schema, dict):
+            return {
+                key: (
+                    value.replace("#/$defs/", "#/components/schemas/")
+                    if key == "$ref" and isinstance(value, str)
+                    else self._rewrite_msgspec_refs(value)
+                )
+                for key, value in schema.items()
+            }
+        if isinstance(schema, list):
+            return [self._rewrite_msgspec_refs(item) for item in schema]
+        return schema
+
     def _to_schema(self, typ: Any) -> Dict[str, Any]:
         # Pydantic models
         try:
@@ -292,6 +308,18 @@ class AsyncAPIGenerator:
                 return {"$ref": f"#/components/schemas/{name}"}
         except Exception:
             pass
+
+        if is_msgspec_struct(typ):
+            try:
+                import msgspec
+
+                refs, components = msgspec.json.schema_components((typ,))
+                for name, schema in msgspec.to_builtins(components).items():
+                    if name not in self._components:
+                        self._components[name] = self._rewrite_msgspec_refs(schema)
+                return self._rewrite_msgspec_refs(msgspec.to_builtins(refs[0]))
+            except Exception:
+                pass
 
         origin = get_origin(typ)
         args = get_args(typ)

@@ -18,7 +18,7 @@ from typing import (
 import engineio
 
 from . import async_manager, base_server, exceptions, packet
-from .dependency import run_with_context
+from .dependency import is_payload_model, run_with_context
 
 if TYPE_CHECKING:  # pragma: no cover
     from .async_admin import InstrumentedAsyncServer
@@ -881,12 +881,6 @@ class AsyncServer(base_server.BaseServer):
                             from .dependency import Depends as _Depends  # type: ignore
                         except Exception:
                             _Depends = None  # type: ignore
-                        try:
-                            from pydantic import (  # type: ignore
-                                BaseModel as _PydanticBaseModel,
-                            )
-                        except Exception:
-                            _PydanticBaseModel = None  # type: ignore
                         for _p in sig_local.parameters.values():
                             if _p.name in {
                                 "socket_id",
@@ -913,11 +907,7 @@ class AsyncServer(base_server.BaseServer):
                                 _EventType,
                             ):
                                 return True
-                            if (
-                                _PydanticBaseModel is not None
-                                and isinstance(ann, type)
-                                and issubclass(ann, _PydanticBaseModel)
-                            ):
+                            if is_payload_model(ann):
                                 return True
                         return False
 
