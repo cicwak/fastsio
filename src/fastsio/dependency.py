@@ -61,6 +61,12 @@ def validate_pydantic_model(annotation: Any, data: Any) -> Any:
     return annotation.parse_obj(data)
 
 
+def pydantic_model_to_builtins(model: Any) -> Any:
+    if hasattr(model, "model_dump"):
+        return model.model_dump(mode="json")
+    return model.dict()
+
+
 def is_msgspec_struct(annotation: Any) -> bool:
     try:
         import msgspec
@@ -76,6 +82,12 @@ def validate_msgspec_struct(annotation: Any, data: Any) -> Any:
     return msgspec.convert(data, type=annotation)
 
 
+def msgspec_struct_to_builtins(struct: Any) -> Any:
+    import msgspec
+
+    return msgspec.to_builtins(struct)
+
+
 def is_payload_model(annotation: Any) -> bool:
     return is_pydantic_model(annotation) or is_msgspec_struct(annotation)
 
@@ -85,6 +97,24 @@ def validate_payload_model(annotation: Any, data: Any) -> Any:
         return validate_pydantic_model(annotation, data)
     if is_msgspec_struct(annotation):
         return validate_msgspec_struct(annotation, data)
+    return data
+
+
+def validate_payload_model_to_builtins(annotation: Any, data: Any) -> Any:
+    if is_pydantic_model(annotation):
+        model = (
+            data
+            if isinstance(data, annotation)
+            else validate_pydantic_model(annotation, data)
+        )
+        return pydantic_model_to_builtins(model)
+    if is_msgspec_struct(annotation):
+        struct = (
+            data
+            if isinstance(data, annotation)
+            else validate_msgspec_struct(annotation, data)
+        )
+        return msgspec_struct_to_builtins(struct)
     return data
 
 

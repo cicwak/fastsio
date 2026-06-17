@@ -1377,6 +1377,29 @@ class TestAsyncServer:
 
         assert resolved == {"user": User(name="alice", groups={"admin"})}
 
+    async def test_msgpack_msgspec_response_model_ack_serializes(self, eio):
+        eio.return_value.send = mock.AsyncMock()
+
+        class Reply(msgspec.Struct):
+            ok: bool
+            count: int
+
+        s = async_server.AsyncServer(serializer="msgpack", async_handlers=False)
+        await s.manager.connect("123", "/")
+
+        @s.on("reply", response_model=Reply)
+        def reply(sid):
+            return {"ok": True, "count": 2}
+
+        pkt = msgpack_packet.MsgPackPacket(packet.EVENT, id=7, data=["reply"])
+        await s._handle_eio_message("123", pkt.encode())
+
+        encoded_ack = s.eio.send.call_args.args[1]
+        ack = msgpack_packet.MsgPackPacket(encoded_packet=encoded_ack)
+        assert ack.packet_type == packet.ACK
+        assert ack.id == 7
+        assert ack.data == [{"ok": True, "count": 2}]
+
     async def test_custom_json(self, eio):
         # Warning: this test cannot run in parallel with other tests, as it
         # changes the JSON encoding/decoding functions

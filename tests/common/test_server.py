@@ -1428,9 +1428,10 @@ class TestServer:
         def reply():
             return {"ok": True, "count": 2}
 
-        assert s._validate_response(reply, {"ok": True, "count": 2}) == Reply(
-            ok=True, count=2
-        )
+        assert s._validate_response(reply, {"ok": True, "count": 2}) == {
+            "ok": True,
+            "count": 2,
+        }
 
     def test_msgspec_response_model_dict(self, eio):
         class Reply(msgspec.Struct):
@@ -1445,7 +1446,49 @@ class TestServer:
 
         assert s._validate_response(
             reply, ("reply.done", {"ok": True, "count": 2}, "extra")
-        ) == ("reply.done", Reply(ok=True, count=2), "extra")
+        ) == ("reply.done", {"ok": True, "count": 2}, "extra")
+
+    def test_msgpack_msgspec_response_model_ack_serializes(self, eio):
+        class Reply(msgspec.Struct):
+            ok: bool
+            count: int
+
+        s = server.Server(serializer="msgpack", async_handlers=False)
+        s.manager.connect("123", "/")
+
+        @s.on("reply", response_model=Reply)
+        def reply(sid):
+            return {"ok": True, "count": 2}
+
+        pkt = msgpack_packet.MsgPackPacket(packet.EVENT, id=7, data=["reply"])
+        s._handle_eio_message("123", pkt.encode())
+
+        encoded_ack = s.eio.send.call_args.args[1]
+        ack = msgpack_packet.MsgPackPacket(encoded_packet=encoded_ack)
+        assert ack.packet_type == packet.ACK
+        assert ack.id == 7
+        assert ack.data == [{"ok": True, "count": 2}]
+
+    def test_pydantic_response_model_ack_serializes(self, eio):
+        class Reply(BaseModel):
+            ok: bool
+            tags: set[str] = set()
+
+        s = server.Server(async_handlers=False)
+        s.manager.connect("123", "/")
+
+        @s.on("reply", response_model=Reply)
+        def reply(sid):
+            return {"ok": True, "tags": {"fast"}}
+
+        pkt = packet.Packet(packet.EVENT, id=7, data=["reply"])
+        s._handle_eio_message("123", pkt.encode())
+
+        encoded_ack = s.eio.send.call_args.args[1]
+        ack = packet.Packet(encoded_packet=encoded_ack)
+        assert ack.packet_type == packet.ACK
+        assert ack.id == 7
+        assert ack.data == [{"ok": True, "tags": ["fast"]}]
 
     def test_asyncapi_msgspec_payload_schema(self, eio):
         class User(msgspec.Struct):

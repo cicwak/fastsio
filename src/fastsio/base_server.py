@@ -20,7 +20,7 @@ import engineio
 
 from . import base_namespace, manager, packet
 from .asyncapi import AsyncAPIConfig
-from .dependency import is_payload_model, validate_payload_model
+from .dependency import is_payload_model, validate_payload_model_to_builtins
 from .router import RouterSIO
 
 default_logger = logging.getLogger("fastsio.server")
@@ -450,11 +450,7 @@ class BaseServer:
             # Validate data against the model
             try:
                 if is_payload_model(model):
-                    validated_data = (
-                        data
-                        if isinstance(data, model)
-                        else validate_payload_model(model, data)
-                    )
+                    validated_data = validate_payload_model_to_builtins(model, data)
                     return (event_name, validated_data) + extra_args
                 return response
 
@@ -467,9 +463,7 @@ class BaseServer:
             # Single response model (existing behavior)
             try:
                 if is_payload_model(response_model):
-                    if isinstance(response, response_model):
-                        return response
-                    return validate_payload_model(response_model, response)
+                    return validate_payload_model_to_builtins(response_model, response)
                 return response
 
             except Exception as exc:
