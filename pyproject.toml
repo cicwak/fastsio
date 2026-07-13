@@ -22,6 +22,7 @@ aiohttp = { version = ">=3.4", optional = true }
 sphinx = { version = "*", optional = true }
 pydantic = "^2.11.7"
 msgpack = "^1.1.1"
+msgspec = ">=0.20,<0.21"
 
 [tool.poetry.extras]
 client = ["requests", "websocket-client"]
