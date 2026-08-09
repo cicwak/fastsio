@@ -17,8 +17,10 @@ The implementation has three optimization levels measured by the suite:
 `NativeServer` uses Socketioxide, Engineioxide, Tokio, and Axum. It currently
 supports sync/async Python handlers, typed injection, Pydantic validation,
 acknowledgements, connect/disconnect, namespaces, rooms, emits, and nested binary
-payloads in events, acknowledgements, and server emits. Middleware, exception
-handlers, distributed adapters, and ASGI mounting remain on the parity roadmap.
+payloads in events, acknowledgements, and server emits. FastAPI-style nested
+`Depends()` graphs are compiled once at handler registration. Middleware,
+exception handlers, distributed adapters, and ASGI mounting remain on the
+parity roadmap.
 
 ## Reproduce
 

@@ -3,12 +3,79 @@
 import dis
 import inspect
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from typing import Any
 
 from pydantic import BaseModel
 
 from . import _rust
+from .dependency import Depends
 from .types import Auth, Data, Event, Reason, SocketID
+
+
+@dataclass(frozen=True)
+class _NativeContext:
+    socket_id: str
+    data: Any
+    event: str
+    server: "NativeServer"
+
+
+@dataclass(frozen=True)
+class _Binding:
+    name: str
+    kind: Any
+    resolver: Callable[[_NativeContext, dict[str, Any]], Any]
+
+
+@dataclass(frozen=True)
+class _CompiledCallable:
+    callback: Callable[..., Any]
+    bindings: tuple[_Binding, ...]
+
+    async def invoke(
+        self,
+        context: _NativeContext,
+        cache: dict[str, Any],
+    ) -> Any:
+        args: list[Any] = []
+        kwargs: dict[str, Any] = {}
+        for binding in self.bindings:
+            value = binding.resolver(context, cache)
+            if inspect.isawaitable(value):
+                value = await value
+            if binding.kind is inspect.Parameter.POSITIONAL_ONLY:
+                args.append(value)
+            else:
+                kwargs[binding.name] = value
+        result = self.callback(*args, **kwargs)
+        return await result if inspect.isawaitable(result) else result
+
+
+@dataclass(frozen=True)
+class _DependencyResolver:
+    plan: _CompiledCallable
+    cache_key: str
+    use_cache: bool
+
+    def __call__(
+        self,
+        context: _NativeContext,
+        cache: dict[str, Any],
+    ) -> Coroutine[Any, Any, Any]:
+        return self._resolve(context, cache)
+
+    async def _resolve(
+        self,
+        context: _NativeContext,
+        cache: dict[str, Any],
+    ) -> Any:
+        if self.use_cache and self.cache_key in cache:
+            return cache[self.cache_key]
+        result = await self.plan.invoke(context, cache)
+        if self.use_cache:
+            cache[self.cache_key] = result
+        return result
 
 
 def _can_eagerly_finish(callback: Callable[..., Any]) -> bool:
@@ -103,6 +170,15 @@ class NativeServer:
         """Compile signature-based injection once, outside the message path."""
         signature = inspect.signature(callback)
         parameters = list(signature.parameters.values())
+        if any(isinstance(parameter.default, Depends) for parameter in parameters):
+            plan = self._compile_call_plan(callback, event, {}, ())
+
+            async def dispatch_with_dependencies(socket_id: str, data: Any) -> Any:
+                context = _NativeContext(socket_id, data, event, self)
+                return await plan.invoke(context, {})
+
+            return dispatch_with_dependencies
+
         legacy = len(parameters) == 2 and all(
             parameter.annotation is inspect.Parameter.empty for parameter in parameters
         )
@@ -145,3 +221,83 @@ class NativeServer:
             return result
 
         return dispatch
+
+    def _compile_call_plan(
+        self,
+        callback: Callable[..., Any],
+        event: str,
+        memo: dict[int, _CompiledCallable],
+        stack: tuple[int, ...],
+    ) -> _CompiledCallable:
+        """Compile a handler or dependency tree into reusable value resolvers."""
+        callback_id = id(callback)
+        if callback_id in memo:
+            return memo[callback_id]
+        if callback_id in stack:
+            raise ValueError(
+                f"circular native dependency involving {callback.__name__!r}"
+            )
+
+        bindings: list[_Binding] = []
+        next_stack = (*stack, callback_id)
+        for parameter in inspect.signature(callback).parameters.values():
+            if parameter.kind in {
+                inspect.Parameter.VAR_POSITIONAL,
+                inspect.Parameter.VAR_KEYWORD,
+            }:
+                continue
+            if isinstance(parameter.default, Depends):
+                dependency = parameter.default
+                dependency_plan = self._compile_call_plan(
+                    dependency.dependency,
+                    event,
+                    memo,
+                    next_stack,
+                )
+                resolver: Callable[[_NativeContext, dict[str, Any]], Any] = (
+                    _DependencyResolver(
+                        dependency_plan,
+                        dependency._cache_key,
+                        dependency.use_cache,
+                    )
+                )
+            else:
+                resolver = self._compile_value_resolver(parameter, event)
+                if resolver is None:
+                    continue
+            bindings.append(_Binding(parameter.name, parameter.kind, resolver))
+
+        plan = _CompiledCallable(callback, tuple(bindings))
+        memo[callback_id] = plan
+        return plan
+
+    def _compile_value_resolver(
+        self,
+        parameter: inspect.Parameter,
+        event: str,
+    ) -> Callable[[_NativeContext, dict[str, Any]], Any] | None:
+        """Compile one built-in injection without per-event introspection."""
+        annotation = parameter.annotation
+        if annotation is SocketID or parameter.name in {"sid", "socket_id"}:
+            return lambda context, _cache: SocketID(context.socket_id)
+        if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+            return lambda context, _cache: annotation.model_validate(context.data)
+        if annotation is Auth or parameter.name == "auth":
+            if event != "connect":
+                raise ValueError("Auth is only available in connect handler")
+            return lambda context, _cache: (
+                Auth(context.data) if context.data is not None else None
+            )
+        if annotation is Reason or parameter.name == "reason":
+            if event != "disconnect":
+                raise ValueError("Reason is only available in disconnect handler")
+            return lambda context, _cache: Reason(str(context.data))
+        if annotation is Data or parameter.name == "data":
+            return lambda context, _cache: context.data
+        if annotation is Event or parameter.name == "event":
+            return lambda context, _cache: Event(context.event)
+        if annotation is NativeServer or parameter.name == "server":
+            return lambda context, _cache: context.server
+        if parameter.default is not inspect.Parameter.empty:
+            return None
+        raise TypeError(f"cannot resolve native handler parameter {parameter.name!r}")

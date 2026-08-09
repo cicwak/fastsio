@@ -4,7 +4,7 @@ from contextlib import suppress
 import aiohttp
 from pydantic import BaseModel
 
-from fastsio import AsyncClient, Auth, NativeServer, Reason, SocketID
+from fastsio import AsyncClient, Auth, Depends, NativeServer, Reason, SocketID
 from fastsio.exceptions import ConnectionError as SocketIOConnectionError
 
 
@@ -68,6 +68,10 @@ async def test_native_server_typed_handler_and_emit(unused_tcp_port):
     task = asyncio.create_task(server.serve(port=unused_tcp_port))
     session, websocket = await connect(unused_tcp_port)
     try:
+        for _ in range(100):
+            if connections:
+                break
+            await asyncio.sleep(0.01)
         assert len(connections) == 1
         await websocket.send_str('421["echo",{"text":"hello"}]')
         echo_ack = await receive_frame(websocket)
@@ -177,6 +181,58 @@ async def test_native_server_binary_payload_and_ack(unused_tcp_port):
     finally:
         if client.connected:
             await client.disconnect()
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
+
+
+async def test_native_server_compiled_dependencies(unused_tcp_port):
+    class Message(BaseModel):
+        text: str
+
+    server = NativeServer()
+    calls = {"message": 0, "enriched": 0}
+
+    def get_message(data: Message):
+        calls["message"] += 1
+        return data.text.upper()
+
+    async def get_enriched(
+        sid: SocketID,
+        event: str,
+        message: str = Depends(get_message),
+    ):
+        await asyncio.sleep(0)
+        calls["enriched"] += 1
+        return f"{event}:{sid}:{message}"
+
+    @server.on("dependency_echo")
+    async def dependency_echo(
+        first: str = Depends(get_enriched),
+        second: str = Depends(get_enriched),
+        uncached: str = Depends(get_message, use_cache=False),
+    ):
+        return {"first": first, "same": first == second, "uncached": uncached}
+
+    task = asyncio.create_task(server.serve(port=unused_tcp_port))
+    session, websocket = await connect(unused_tcp_port)
+    try:
+        await websocket.send_str('427["dependency_echo",{"text":"fast"}]')
+        acknowledgement = await receive_frame(websocket)
+        assert acknowledgement.startswith("437")
+        assert '"same":true' in acknowledgement
+        assert '"uncached":"FAST"' in acknowledgement
+        assert "dependency_echo:" in acknowledgement
+        assert calls == {"message": 2, "enriched": 1}
+
+        await websocket.send_str('428["dependency_echo",{"text":"again"}]')
+        second_acknowledgement = await receive_frame(websocket)
+        assert second_acknowledgement.startswith("438")
+        assert '"uncached":"AGAIN"' in second_acknowledgement
+        assert calls == {"message": 4, "enriched": 2}
+    finally:
+        await websocket.close()
+        await session.close()
         task.cancel()
         with suppress(asyncio.CancelledError):
             await task
