@@ -1,38 +1,40 @@
 [tool.poetry]
-name = "fastsio"
-version = "0.3.2"  # будет перезаписываться GitHub Actions по тегу
-description = "light and typization Socket.IO server and client for Python"
-license = "MIT"
-readme = "README.md"
-homepage = "https://github.com/cicwak/fastsio"
-repository = "https://github.com/cicwak/fastsio"
-authors = [
-  "Miguel Grinberg <miguel.grinberg@gmail.com>",
-  "Konstantin Ponomarev <cicwak@gmail.com>",
-]
 packages = [{ include = "fastsio", from = "src" }]
 
-[tool.poetry.dependencies]
-python = ">=3.9"
-bidict = ">=0.21.0"
-python-engineio = "^4.12.2"
-requests = { version = ">=2.21.0", optional = true }
-websocket-client = { version = ">=0.54.0", optional = true }
-aiohttp = { version = ">=3.4", optional = true }
-sphinx = { version = "*", optional = true }
-pydantic = "^2.11.7"
-msgpack = "^1.1.1"
+[project]
+name = "fastsio"
+version = "0.4.0"
+description = "light and typization Socket.IO server and client for Python"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+  { name = "Miguel Grinberg", email = "miguel.grinberg@gmail.com" },
+  { name = "Konstantin Ponomarev", email = "cicwak@gmail.com" },
+]
+dependencies = [
+  "bidict>=0.21.0",
+  "python-engineio>=4.12.2,<5.0.0",
+  "pydantic>=2.11.7,<3.0.0",
+  "msgpack>=1.1.1,<2.0.0",
+]
 
-[tool.poetry.extras]
-client = ["requests", "websocket-client"]
-asyncio_client = ["aiohttp"]
+[project.optional-dependencies]
+client = ["requests>=2.21.0", "websocket-client>=0.54.0"]
+asyncio-client = ["aiohttp>=3.4"]
 docs = ["sphinx"]
+
+[project.urls]
+Homepage = "https://github.com/cicwak/fastsio"
+Repository = "https://github.com/cicwak/fastsio"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"
 requests = "^2.32.5"
 uvicorn = "^0.35.0"
 pytest-asyncio = "^1.1.0"
+maturin = "^1.14.1"
+aiohttp = "^3.12.15"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -51,8 +53,13 @@ where = [
 namespaces = false
 
 [build-system]
-requires = ["poetry-core>=1.8.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["maturin>=1.14,<2"]
+build-backend = "maturin"
+
+[tool.maturin]
+python-source = "src"
+module-name = "fastsio._rust"
+features = ["pyo3/extension-module"]
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]

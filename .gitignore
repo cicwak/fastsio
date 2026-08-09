@@ -45,3 +45,4 @@ htmlcov
 *.swp
 
 node_modules
+target/
