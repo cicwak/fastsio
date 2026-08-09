@@ -30,6 +30,18 @@ payloads, compiled `Depends()` graphs, event/namespace middleware filters, and
 typed exception handlers. See
 [`benchmarks/README.md`](benchmarks/README.md) for the method and raw results.
 
+For horizontal scaling, pass a Redis 7+ RESP3 URL. Broadcasts and room-targeted
+emits then propagate between native server processes:
+
+```python
+server = NativeServer(
+    redis_url="redis://redis.internal:6379?protocol=resp3",
+)
+```
+
+The Rust adapter protocol is shared between `fastsio` native nodes; it is not
+wire-compatible with the JavaScript `@socket.io/redis-adapter` protocol.
+
 ```python
 import asyncio
 

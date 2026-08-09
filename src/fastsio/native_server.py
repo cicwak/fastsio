@@ -108,9 +108,9 @@ class NativeServer:
     payloads. Handlers can be synchronous or asynchronous.
     """
 
-    def __init__(self) -> None:
-        """Create an unbound native server."""
-        self._native = _rust.NativeServer()
+    def __init__(self, redis_url: str | None = None) -> None:
+        """Create an unbound native server, optionally with a Redis adapter."""
+        self._native = _rust.NativeServer(redis_url)
         self.handlers: dict[str, Callable[..., Any]] = {}
         self.exception_handlers: dict[type[BaseException], Callable[..., Any]] = {}
         self._compiled_exception_handlers: dict[

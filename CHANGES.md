@@ -15,6 +15,8 @@
   use an event-scoped dependency cache during dispatch.
 - Added precompiled middleware pipelines with event/namespace filters and
   most-specific typed exception handlers to `NativeServer`.
+- Added optional Redis 7+ RESP3 distribution for cross-process broadcasts and
+  room operations in the Rust native server.
 - The native server with a real Python async handler improved median throughput
   by 3.54x on the reference workload, passing the 2x development gate. The pure
   Rust transport core reached 5.74x.
