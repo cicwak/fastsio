@@ -9,13 +9,22 @@ import time
 import aiohttp
 
 
+async def receive_application_frame(websocket):
+    while True:
+        frame = await websocket.receive_str()
+        if frame == "2":
+            await websocket.send_str("3")
+            continue
+        return frame
+
+
 async def connect(session, url):
     websocket = await session.ws_connect(url, autoping=False, compress=0)
     opened = await websocket.receive_str()
     if not opened.startswith("0"):
         raise RuntimeError(f"unexpected Engine.IO handshake: {opened!r}")
     await websocket.send_str("40")
-    connected = await websocket.receive_str()
+    connected = await receive_application_frame(websocket)
     if not connected.startswith("40"):
         raise RuntimeError(f"unexpected Socket.IO handshake: {connected!r}")
     return websocket
@@ -33,10 +42,7 @@ async def worker(session, url, deadline, worker_id, latencies):
             )
             started = time.perf_counter()
             await websocket.send_str(payload)
-            response = await websocket.receive_str()
-            if response == "2":
-                await websocket.send_str("3")
-                response = await websocket.receive_str()
+            response = await receive_application_frame(websocket)
             if not response.startswith(f"43{ack_id}"):
                 raise RuntimeError(f"unexpected acknowledgement: {response!r}")
             elapsed = time.perf_counter() - started
@@ -80,7 +86,9 @@ async def run(url, connections, duration):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--url", default="http://127.0.0.1:8765/socket.io/?EIO=4&transport=websocket")
+    parser.add_argument(
+        "--url", default="http://127.0.0.1:8765/socket.io/?EIO=4&transport=websocket"
+    )
     parser.add_argument("--connections", type=int, default=100)
     parser.add_argument("--duration", type=float, default=5.0)
     args = parser.parse_args()

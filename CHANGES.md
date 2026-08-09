@@ -7,8 +7,12 @@
   Engine.IO codec. The installation is process-wide because python-engineio
   does not expose a packet codec interface.
 - Added reproducible codec and end-to-end ASGI WebSocket A/B benchmarks.
-- The end-to-end prototype improved median throughput by 1.13x on the reference
-  machine. This does not meet the 2x threshold for a full Rust rewrite.
+- Added `NativeServer`, backed by Socketioxide, Engineioxide, Tokio, and Axum.
+  It supports sync and async Python handlers, typed injection, Pydantic payloads,
+  acknowledgements, namespaces, rooms, emits, and connect/disconnect handlers.
+- The native server with a real Python async handler improved median throughput
+  by 2.98x on the reference workload, passing the 2x development gate. The pure
+  Rust transport core reached 4.95x.
 
 **Release 5.13.0** - 2025-04-12
 

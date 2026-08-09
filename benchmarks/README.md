@@ -6,22 +6,26 @@ of the Python baseline under the same workload.
 
 ## Scope
 
-The prototype moves these protocol hot paths to a PyO3 extension:
+The implementation has three optimization levels measured by the suite:
 
-- Engine.IO packet framing, JSON parsing, and base64 handling;
-- Socket.IO packet header, namespace, acknowledgement id, and JSON parsing;
-- Socket.IO packet encoding for non-binary packets.
+- `rust-codec`: PyO3 Engine.IO and Socket.IO packet codecs under the existing
+  python-engineio transport;
+- `native-python`: Rust transport/state/protocol with a real Python async
+  acknowledgement handler through PyO3;
+- `native-core`: the transport ceiling with the acknowledgement handler in Rust.
 
-The ASGI transport, connection state, queues, dispatch, dependency injection,
-and application handler remain in Python. `rust_engineio=True` currently swaps
-python-engineio's packet class process-wide because python-engineio does not
-provide a per-server codec hook.
+`NativeServer` uses Socketioxide, Engineioxide, Tokio, and Axum. It currently
+supports sync/async Python handlers, typed injection, Pydantic validation,
+acknowledgements, connect/disconnect, namespaces, rooms, and emits. Binary
+payload bridging, middleware, exception handlers, distributed adapters, and
+ASGI mounting remain on the parity roadmap.
 
 ## Reproduce
 
 ```bash
 poetry install
 poetry run maturin develop --release
+cargo build --release --features native-benchmark --bin fastsio-native-benchmark
 poetry run python benchmarks/codec_benchmark.py --duration 0.75 --repeats 7
 poetry run python benchmarks/run_ab.py --connections 100 --duration 5 --repeats 3
 ```
@@ -42,19 +46,22 @@ CPython 3.13.13, uvicorn's wsproto backend, and a release-mode ABI3 extension.
 | Engine.IO decode | 254,299 | 803,305 | 3.16x |
 | Server receive and dispatch | 250,583 | 396,884 | 1.58x |
 
-The end-to-end medians across three 5-second runs were:
+The current end-to-end medians across three 5-second runs were:
 
 | Variant | Events/s | p50 latency | p95 latency |
 | --- | ---: | ---: | ---: |
-| Python | 8,728.0 | 10.904 ms | 16.398 ms |
-| Rust codecs | 9,858.2 | 9.836 ms | 11.666 ms |
+| Python | 9,834.6 | 9.755 ms | 12.230 ms |
+| Rust codecs | 9,566.5 | 9.322 ms | 12.336 ms |
+| Native transport + Python async handler | 29,332.1 | 3.207 ms | 6.043 ms |
+| Native Rust core | 48,714.7 | 1.775 ms | 3.418 ms |
 
-Throughput speedup: **1.129x**. Required threshold: **2.0x**.
+Native Python throughput speedup: **2.983x**. Native core speedup: **4.953x**.
+Required threshold: **2.0x**.
 
 ## Verdict
 
-Do not rewrite the complete library in Rust based on this prototype. Packet
-parsing benefits substantially, but transport and Python dispatch dominate the
-real request path. Keep the codec work as an experimental branch and profile
-connection state, queueing, and handler dispatch before considering a larger
-native core.
+Proceed with the native-core architecture. Codec replacement alone is not
+materially faster end to end, while moving transport, connection state, queues,
+and protocol handling into Rust clears the 2x gate even when application logic
+still runs in Python. Preserve the compatible Python server during feature
+parity work instead of silently changing its behavior.

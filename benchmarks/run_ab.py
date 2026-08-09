@@ -9,6 +9,7 @@ import statistics
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 from websocket_load import run
 
@@ -25,29 +26,44 @@ def wait_for_port(process, port, timeout=10):
     raise TimeoutError("benchmark server did not start")
 
 
-def run_variant(native, connections, duration, port):
+def run_variant(variant, connections, duration, port):
     environment = os.environ.copy()
-    environment["FASTSIO_BENCH_NATIVE"] = "1" if native else "0"
-    command = [
-        sys.executable,
-        "-m",
-        "uvicorn",
-        "benchmarks.asgi_echo_server:app",
-        "--host",
-        "127.0.0.1",
-        "--port",
-        str(port),
-        "--log-level",
-        "error",
-        "--ws",
-        "wsproto",
-    ]
+    environment["FASTSIO_BENCH_PORT"] = str(port)
+    if variant in {"python", "rust-codec"}:
+        environment["FASTSIO_BENCH_NATIVE"] = "1" if variant == "rust-codec" else "0"
+        command = [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "benchmarks.asgi_echo_server:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(port),
+            "--log-level",
+            "error",
+            "--ws",
+            "wsproto",
+        ]
+    elif variant == "native-python":
+        environment["FASTSIO_BENCH_ASYNC"] = "1"
+        command = [sys.executable, "benchmarks/native_python_server.py"]
+    elif variant == "native-core":
+        binary = Path("target/release/fastsio-native-benchmark")
+        if not binary.exists():
+            raise RuntimeError(
+                "build native core first: cargo build --release "
+                "--features native-benchmark --bin fastsio-native-benchmark"
+            )
+        command = [str(binary)]
+    else:
+        raise ValueError(f"unknown benchmark variant: {variant}")
     process = subprocess.Popen(command, env=environment)
     try:
         wait_for_port(process, port)
         url = f"http://127.0.0.1:{port}/socket.io/?EIO=4&transport=websocket"
         result = asyncio.run(run(url, connections, duration))
-        result["variant"] = "rust" if native else "python"
+        result["variant"] = variant
         return result
     finally:
         process.terminate()
@@ -64,18 +80,25 @@ def main():
     parser.add_argument("--duration", type=float, default=5.0)
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument(
+        "--variants",
+        nargs="+",
+        choices=("python", "rust-codec", "native-python", "native-core"),
+        default=("python", "rust-codec", "native-python", "native-core"),
+    )
     args = parser.parse_args()
     results = []
     for repeat in range(args.repeats):
-        order = (False, True) if repeat % 2 == 0 else (True, False)
-        for native in order:
-            result = run_variant(native, args.connections, args.duration, args.port)
+        offset = repeat % len(args.variants)
+        order = args.variants[offset:] + args.variants[:offset]
+        for variant in order:
+            result = run_variant(variant, args.connections, args.duration, args.port)
             result["repeat"] = repeat + 1
             results.append(result)
 
     by_variant = {
         variant: [result for result in results if result["variant"] == variant]
-        for variant in ("python", "rust")
+        for variant in args.variants
     }
     medians = {
         variant: {
@@ -98,12 +121,19 @@ def main():
         }
         for variant, variant_results in by_variant.items()
     }
-    speedup = medians["rust"]["events_s"] / medians["python"]["events_s"]
+    speedups = {
+        variant: round(
+            values["events_s"] / medians["python"]["events_s"],
+            3,
+        )
+        for variant, values in medians.items()
+        if variant != "python"
+    }
     summary = {
         "runs": results,
         "medians": medians,
-        "throughput_speedup": round(speedup, 3),
-        "meets_2x_threshold": speedup >= 2,
+        "throughput_speedups": speedups,
+        "native_python_meets_2x_threshold": speedups.get("native-python", 0) >= 2,
     }
     print(json.dumps(summary, indent=2))
 

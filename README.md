@@ -13,19 +13,41 @@
 - **Flexible middleware system** for authentication, logging, rate limiting, and more
 - **Compatibility** with existing ASGI/WSGI stacks
 - **Full support** for the Socket.IO protocol
+- **Rust-native transport** via `NativeServer` for performance-sensitive services
 
 ## Performance work in 0.4.0
 
-The `0.4.0` development branch includes a PyO3 prototype for Engine.IO and
-Socket.IO packet encoding and decoding. The native Socket.IO codec is enabled
-when the compiled extension is available. The experimental Engine.IO codec can
-be selected with `AsyncServer(..., rust_engineio=True)`.
+The `0.4.0` development branch adds `NativeServer`: a PyO3 API backed by a Rust
+Socket.IO/Engine.IO transport, connection state, and protocol core. In the
+reference end-to-end WebSocket benchmark it processes **2.98x more events per
+second** than the compatible Python server while still executing a real typed
+Python async handler. The transport-only ceiling is **4.95x** the baseline.
 
-The code is measurably faster in codec-only tests, but the full ASGI WebSocket
-echo benchmark improved throughput by **1.13x**, not the required 2x. The
-project therefore does not claim a 2x end-to-end speedup and is not proceeding
-with a full Rust transport rewrite on this evidence. See
+The existing `AsyncServer` and `Server` APIs remain available for full backward
+compatibility. The native server is a separate high-performance mode while its
+feature surface is brought to parity. See
 [`benchmarks/README.md`](benchmarks/README.md) for the method and raw results.
+
+```python
+import asyncio
+
+from pydantic import BaseModel
+from fastsio import NativeServer, SocketID
+
+server = NativeServer()
+
+
+class Message(BaseModel):
+    text: str
+
+
+@server.on("echo")
+async def echo(sid: SocketID, data: Message):
+    return {"sid": sid, "text": data.text}
+
+
+asyncio.run(server.serve(host="127.0.0.1", port=8765))
+```
 
 ## Installation
 
