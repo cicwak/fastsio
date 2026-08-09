@@ -1,102 +1,117 @@
-name: Release → (Test)PyPI + GitHub Assets
+name: Release wheels and publish
 
 on:
   release:
-    types: [released, prereleased]  # published normal release и pre-release
+    types: [released, prereleased]
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-publish:
-    runs-on: ubuntu-latest
-    env:
-      PYTHON_VERSION: "3.12"
-
+  wheels:
+    name: Wheel (${{ matrix.platform.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - runner: ubuntu-latest
+            target: x86_64
+            manylinux: "2_28"
+          - runner: ubuntu-latest
+            target: aarch64
+            manylinux: "2_28"
+          - runner: macos-15-intel
+            target: x86_64
+            manylinux: "off"
+          - runner: macos-15
+            target: aarch64
+            manylinux: "off"
+          - runner: windows-latest
+            target: x64
+            manylinux: "off"
+    runs-on: ${{ matrix.platform.runner }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set variables from Release tag
-        id: meta
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Verify release version
+        shell: bash
         run: |
-          TAG="${{ github.event.release.tag_name }}"     # e.g. v0.1.0 or 0.1.0
-          VERSION="${TAG#v}"                             # strip leading 'v' if present
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          if [[ "${{ github.event.release.prerelease }}" == "true" ]]; then
-            echo "repo=testpypi" >> $GITHUB_OUTPUT
-          else
-            echo "repo=pypi" >> $GITHUB_OUTPUT
-          fi
-          echo "Resolved: version=$VERSION repo=$(cat $GITHUB_OUTPUT | grep repo | cut -d= -f2)"
+          python - <<'PY'
+          import os
+          import tomllib
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+          with open("pyproject.toml", "rb") as file:
+              version = tomllib.load(file)["project"]["version"]
+          tag = os.environ["RELEASE_TAG"].removeprefix("v")
+          if tag != version:
+              raise SystemExit(f"release tag {tag!r} does not match project {version!r}")
+          PY
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+      - name: Build ABI3 wheel
+        uses: PyO3/maturin-action@v1
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install Poetry
-        run: pipx install "poetry==2.3.3"
-
-      - name: Show Poetry version
-        run: poetry --version
-
-      - name: Cache Poetry & pip
-        uses: actions/cache@v4
+          target: ${{ matrix.platform.target }}
+          manylinux: ${{ matrix.platform.manylinux }}
+          args: --release --locked --compatibility pypi --out dist
+      - uses: actions/upload-artifact@v4
         with:
-          path: |
-            ~/.cache/pypoetry
-            ~/.cache/pip
-          key: poetry-${{ runner.os }}-${{ env.PYTHON_VERSION }}-**2.3.3**-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            poetry-${{ runner.os }}-${{ env.PYTHON_VERSION }}-**2.3.3**-
+          name: wheel-${{ matrix.platform.target }}-${{ matrix.platform.runner }}
+          path: dist/*.whl
+          if-no-files-found: error
 
-      - name: Install deps (no dev)
-        run: poetry install --no-interaction --no-root --only main
+  sdist:
+    name: Source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
 
-      - name: Sync version into pyproject.toml
-        run: poetry version ${{ steps.meta.outputs.version }}
-
-      - name: Build sdist + wheel
-        run: poetry build --no-interaction
-
-      # (опционально) Быстрая проверка метаданных пакета перед публикацией
-      - name: Twine check
+  publish:
+    name: Publish release artifacts
+    needs: [wheels, sdist]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*"
+          path: dist
+          merge-multiple: true
+      - name: Validate distributions
         run: |
           python -m pip install --upgrade twine
           twine check dist/*
-
-      # Настройка репозиториев/токенов Poetry
-      - name: Configure TestPyPI
-        if: ${{ steps.meta.outputs.repo == 'testpypi' }}
-        run: |
-          poetry config repositories.testpypi https://test.pypi.org/legacy/
-          poetry config pypi-token.testpypi ${{ secrets.TEST_PYPI_API_TOKEN }}
-
-      - name: Configure PyPI
-        if: ${{ steps.meta.outputs.repo == 'pypi' }}
-        run: |
-          poetry config pypi-token.pypi ${{ secrets.PYPI_API_TOKEN }}
-
-      # Публикация
-      - name: Publish to TestPyPI
-        if: ${{ steps.meta.outputs.repo == 'testpypi' }}
-        run: poetry publish -r testpypi --no-interaction
-
-      - name: Publish to PyPI
-        if: ${{ steps.meta.outputs.repo == 'pypi' }}
-        run: poetry publish --no-interaction
-
-      # Прикрепляем артефакты к странице GitHub Release
-      - name: Upload artifacts to GitHub Release
+      - name: Publish prerelease to TestPyPI
+        if: ${{ github.event.release.prerelease }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository_url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          packages_dir: dist
+      - name: Publish release to PyPI
+        if: ${{ github.event.release.prerelease == false }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: dist
+      - name: Attach artifacts to GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.release.tag_name }}
-          files: |
-            dist/*.whl
-            dist/*.tar.gz
-
-      # (опционально) также сохраняем артефакты в job artifacts
-      - name: Upload build artifacts (job)
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-${{ steps.meta.outputs.version }}
-          path: dist/
-          if-no-files-found: error
+          files: dist/*
