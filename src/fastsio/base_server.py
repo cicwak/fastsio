@@ -42,6 +42,11 @@ class BaseServer:
         **kwargs: Any,
     ) -> None:
         engineio_options = kwargs
+        rust_engineio = bool(engineio_options.pop("rust_engineio", False))
+        if rust_engineio:
+            from .rust_engineio import install
+
+            self._original_engineio_packet_class = install()
         # Extract AsyncAPI configuration before passing options to Engine.IO
         asyncapi_dict: Optional[AsyncAPIConfig | Dict[str, Any]] = asyncapi
         if isinstance(asyncapi, AsyncAPIConfig):

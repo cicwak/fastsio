@@ -1,6 +1,33 @@
 import functools
+import os
 
 from engineio import json as _json
+
+try:
+    from . import _rust
+except ImportError:  # pragma: no cover - source checkout without a native build
+    _rust = None
+
+_native_codec_enabled = _rust is not None and os.environ.get(
+    "FASTSIO_NATIVE_CODEC", "1"
+) not in {"0", "false", "False"}
+
+
+def set_native_codec(enabled):
+    """Enable or disable the Rust packet codec for this process.
+
+    This switch exists primarily to make A/B benchmarks reproducible. Wheels
+    include the native codec and enable it by default.
+    """
+    global _native_codec_enabled
+    if enabled and _rust is None:
+        raise RuntimeError("fastsio was installed without its Rust extension")
+    _native_codec_enabled = enabled
+
+
+def native_codec_enabled():
+    """Return whether the Rust packet codec is active."""
+    return _native_codec_enabled
 
 (CONNECT, DISCONNECT, EVENT, ACK, CONNECT_ERROR, BINARY_EVENT, BINARY_ACK) = (
     0,
@@ -71,6 +98,20 @@ class Packet:
         of packets where the first is the original packet with placeholders for
         the binary components and the remaining ones the binary attachments.
         """
+        if (
+            _native_codec_enabled
+            and self.packet_type not in (BINARY_EVENT, BINARY_ACK)
+            and self.json is _json
+        ):
+            try:
+                return _rust.encode_socketio(
+                    self.packet_type, self.data, self.namespace, self.id
+                )
+            except (TypeError, ValueError, OverflowError):
+                # Preserve stdlib json behavior for uncommon Python values
+                # that serde cannot represent, such as NaN and custom ints.
+                pass
+
         encoded_packet = str(self.packet_type)
         if self.packet_type == BINARY_EVENT or self.packet_type == BINARY_ACK:
             data, attachments = self._deconstruct_binary(self.data)
@@ -94,6 +135,21 @@ class Packet:
         The return value indicates how many binary attachment packets are
         necessary to fully decode the packet.
         """
+        if _native_codec_enabled and self.json is _json:
+            try:
+                (
+                    self.packet_type,
+                    self.namespace,
+                    self.id,
+                    self.data,
+                    attachment_count,
+                ) = _rust.decode_socketio(encoded_packet)
+                return attachment_count
+            except (TypeError, ValueError, OverflowError):
+                # Let the reference implementation accept extensions such as
+                # NaN, or raise its established compatibility error.
+                pass
+
         ep = encoded_packet
         try:
             self.packet_type = int(ep[0:1])
