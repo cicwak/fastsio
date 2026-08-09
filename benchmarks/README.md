@@ -16,9 +16,9 @@ The implementation has three optimization levels measured by the suite:
 
 `NativeServer` uses Socketioxide, Engineioxide, Tokio, and Axum. It currently
 supports sync/async Python handlers, typed injection, Pydantic validation,
-acknowledgements, connect/disconnect, namespaces, rooms, and emits. Binary
-payload bridging, middleware, exception handlers, distributed adapters, and
-ASGI mounting remain on the parity roadmap.
+acknowledgements, connect/disconnect, namespaces, rooms, emits, and nested binary
+payloads in events, acknowledgements, and server emits. Middleware, exception
+handlers, distributed adapters, and ASGI mounting remain on the parity roadmap.
 
 ## Reproduce
 
@@ -50,12 +50,12 @@ The current end-to-end medians across three 5-second runs were:
 
 | Variant | Events/s | p50 latency | p95 latency |
 | --- | ---: | ---: | ---: |
-| Python | 9,834.6 | 9.755 ms | 12.230 ms |
-| Rust codecs | 9,566.5 | 9.322 ms | 12.336 ms |
-| Native transport + Python async handler | 29,332.1 | 3.207 ms | 6.043 ms |
-| Native Rust core | 48,714.7 | 1.775 ms | 3.418 ms |
+| Python | 11,207.3 | 8.827 ms | 9.896 ms |
+| Rust codecs | 11,546.9 | 8.617 ms | 9.356 ms |
+| Native transport + Python async handler | 39,798.0 | 2.420 ms | 4.321 ms |
+| Native Rust core | 64,694.0 | 1.463 ms | 2.079 ms |
 
-Native Python throughput speedup: **2.983x**. Native core speedup: **4.953x**.
+Native Python throughput speedup: **3.551x**. Native core speedup: **5.772x**.
 Required threshold: **2.0x**.
 
 ## Verdict

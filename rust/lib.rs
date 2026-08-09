@@ -7,6 +7,7 @@ use pythonize::{depythonize, pythonize};
 use serde_json::Value;
 
 mod native_server;
+mod wire_value;
 
 const MESSAGE: u8 = 4;
 type SocketIoDecoded = (u8, Option<String>, Option<Py<PyAny>>, Py<PyAny>, usize);

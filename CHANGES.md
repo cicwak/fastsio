@@ -9,10 +9,11 @@
 - Added reproducible codec and end-to-end ASGI WebSocket A/B benchmarks.
 - Added `NativeServer`, backed by Socketioxide, Engineioxide, Tokio, and Axum.
   It supports sync and async Python handlers, typed injection, Pydantic payloads,
-  acknowledgements, namespaces, rooms, emits, and connect/disconnect handlers.
+  acknowledgements, namespaces, rooms, emits, connect/disconnect handlers, and
+  nested binary payloads in events, acknowledgements, and server emits.
 - The native server with a real Python async handler improved median throughput
-  by 2.98x on the reference workload, passing the 2x development gate. The pure
-  Rust transport core reached 4.95x.
+  by 3.55x on the reference workload, passing the 2x development gate. The pure
+  Rust transport core reached 5.77x.
 
 **Release 5.13.0** - 2025-04-12
 

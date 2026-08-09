@@ -7,13 +7,13 @@ use std::{
 
 use pyo3::{exceptions::PyRuntimeError, prelude::*, types::PyAny};
 use pyo3_async_runtimes::TaskLocals;
-use pythonize::{depythonize, pythonize};
-use serde_json::{Value, json};
 use socketioxide::{
     SocketIo,
-    extract::{AckSender, Data, SocketRef},
+    extract::{AckSender, Data, SocketRef, TryData},
     socket::DisconnectReason,
 };
+
+use crate::wire_value::WireValue;
 
 type PythonFuture = Pin<Box<dyn Future<Output = PyResult<Py<PyAny>>> + Send>>;
 
@@ -26,10 +26,10 @@ async fn invoke_handler(
     callback: Arc<Py<PyAny>>,
     locals: TaskLocals,
     sid: String,
-    data: Value,
-) -> PyResult<Value> {
+    data: WireValue,
+) -> PyResult<WireValue> {
     let call = Python::attach(|py| -> PyResult<PythonCall> {
-        let data = pythonize(py, &data)?;
+        let data = data.into_python(py)?;
         let result = callback.call1(py, (sid, data))?;
         let inspect = py.import("inspect")?;
         let is_awaitable = inspect
@@ -48,7 +48,7 @@ async fn invoke_handler(
         PythonCall::Ready(result) => result,
         PythonCall::Awaitable(future) => future.await?,
     };
-    Python::attach(|py| Ok(depythonize(result.bind(py))?))
+    Python::attach(|py| WireValue::from_python(result.bind(py)))
 }
 
 #[pyclass(module = "fastsio._rust")]
@@ -131,7 +131,7 @@ impl NativeServer {
         data: &Bound<'_, PyAny>,
         to: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
-        let data: Value = depythonize(data)?;
+        let data = WireValue::from_python(data)?;
         let io = self
             .io
             .read()
@@ -181,7 +181,7 @@ impl NativeServer {
                 let connection_locals = locals.clone();
                 io.ns(
                     namespace.clone(),
-                    async move |socket: SocketRef, Data::<Value>(auth)| {
+                    async move |socket: SocketRef, Data::<WireValue>(auth)| {
                         if let Some(callback) = connection_handlers.get("connect")
                             && let Err(error) = invoke_handler(
                                 callback.clone(),
@@ -202,7 +202,7 @@ impl NativeServer {
                                         callback.clone(),
                                         locals.clone(),
                                         socket.id.to_string(),
-                                        Value::String(reason.to_string()),
+                                        WireValue::String(reason.to_string()),
                                     )
                                     .await
                                     {
@@ -221,8 +221,9 @@ impl NativeServer {
                             socket.on(
                                 event,
                                 async move |socket: SocketRef,
-                                            Data::<Value>(data),
+                                            TryData::<WireValue>(data),
                                             ack: AckSender| {
+                                    let data = data.unwrap_or(WireValue::Null);
                                     let response = invoke_handler(
                                         callback.clone(),
                                         locals.clone(),
@@ -232,7 +233,10 @@ impl NativeServer {
                                     .await
                                     .unwrap_or_else(|error| {
                                         Python::attach(|py| error.print(py));
-                                        json!({"error": "native handler failed"})
+                                        WireValue::Object(vec![(
+                                            "error".to_owned(),
+                                            WireValue::String("native handler failed".to_owned()),
+                                        )])
                                     });
                                     ack.send(&response).ok();
                                 },

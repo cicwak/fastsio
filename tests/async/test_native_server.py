@@ -4,7 +4,8 @@ from contextlib import suppress
 import aiohttp
 from pydantic import BaseModel
 
-from fastsio import Auth, NativeServer, Reason, SocketID
+from fastsio import AsyncClient, Auth, NativeServer, Reason, SocketID
+from fastsio.exceptions import ConnectionError as SocketIOConnectionError
 
 
 async def receive_frame(websocket):
@@ -111,6 +112,71 @@ async def test_native_server_namespace(unused_tcp_port):
     finally:
         await websocket.close()
         await session.close()
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
+
+
+async def test_native_server_binary_payload_and_ack(unused_tcp_port):
+    server = NativeServer()
+
+    @server.on("binary_echo")
+    def binary_echo(_sid, data):
+        assert data == {
+            "blob": b"\x00\x01fastsio",
+            "nested": [b"left", {"right": b"right"}],
+        }
+        return {
+            "blob": data["blob"],
+            "nested": [data["nested"][0], bytes(data["nested"][1]["right"])],
+        }
+
+    @server.on("request_binary_push")
+    async def request_binary_push(sid: SocketID, server: NativeServer):
+        await server.emit(
+            "binary_push",
+            {"blob": bytearray(b"server-push")},
+            to=sid,
+        )
+        return {"ok": True}
+
+    task = asyncio.create_task(server.serve(port=unused_tcp_port))
+    client = AsyncClient()
+    pushed = asyncio.get_running_loop().create_future()
+
+    @client.on("binary_push")
+    def binary_push(data):
+        pushed.set_result(data)
+
+    url = f"http://127.0.0.1:{unused_tcp_port}"
+    deadline = asyncio.get_running_loop().time() + 3
+    while True:
+        try:
+            await client.connect(url, transports=["websocket"])
+            break
+        except SocketIOConnectionError:
+            if asyncio.get_running_loop().time() >= deadline:
+                raise
+            await asyncio.sleep(0.01)
+
+    try:
+        acknowledgement = await client.call(
+            "binary_echo",
+            {
+                "blob": b"\x00\x01fastsio",
+                "nested": [b"left", {"right": b"right"}],
+            },
+            timeout=2,
+        )
+        assert acknowledgement == {
+            "blob": b"\x00\x01fastsio",
+            "nested": [b"left", b"right"],
+        }
+        assert await client.call("request_binary_push", timeout=2) == {"ok": True}
+        assert await asyncio.wait_for(pushed, 2) == {"blob": b"server-push"}
+    finally:
+        if client.connected:
+            await client.disconnect()
         task.cancel()
         with suppress(asyncio.CancelledError):
             await task
