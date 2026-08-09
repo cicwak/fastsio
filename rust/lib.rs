@@ -6,6 +6,8 @@ use pyo3::types::{PyBytes, PyModule};
 use pythonize::{depythonize, pythonize};
 use serde_json::Value;
 
+mod native_server;
+
 const MESSAGE: u8 = 4;
 type SocketIoDecoded = (u8, Option<String>, Option<Py<PyAny>>, Py<PyAny>, usize);
 
@@ -222,5 +224,6 @@ fn _rust(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(encode_engineio, module)?)?;
     module.add_function(wrap_pyfunction!(decode_socketio, module)?)?;
     module.add_function(wrap_pyfunction!(encode_socketio, module)?)?;
+    module.add_class::<native_server::NativeServer>()?;
     Ok(())
 }

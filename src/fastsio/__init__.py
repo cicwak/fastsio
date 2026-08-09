@@ -13,6 +13,7 @@ from .kafka_manager import KafkaManager
 from .kombu_manager import KombuManager
 from .manager import Manager
 from .middleware import Middleware, WSGIApp
+from .native_server import NativeServer
 from .middlewares import (
     BaseMiddleware,
     MiddlewareChain,
@@ -56,6 +57,7 @@ __all__ = [
     "Middleware",
     "MiddlewareChain",
     "Namespace",
+    "NativeServer",
     "PubSubManager",
     "Reason",
     "RedisManager",
