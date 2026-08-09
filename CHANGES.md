@@ -16,8 +16,8 @@
 - Added precompiled middleware pipelines with event/namespace filters and
   most-specific typed exception handlers to `NativeServer`.
 - The native server with a real Python async handler improved median throughput
-  by 3.55x on the reference workload, passing the 2x development gate. The pure
-  Rust transport core reached 5.77x.
+  by 3.54x on the reference workload, passing the 2x development gate. The pure
+  Rust transport core reached 5.74x.
 
 **Release 5.13.0** - 2025-04-12
 

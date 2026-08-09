@@ -38,6 +38,7 @@ aiohttp = "^3.12.15"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+testpaths = ["tests"]
 
 [tool.setuptools]
 zip-safe = false
