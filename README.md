@@ -14,6 +14,19 @@
 - **Compatibility** with existing ASGI/WSGI stacks
 - **Full support** for the Socket.IO protocol
 
+## Performance work in 0.4.0
+
+The `0.4.0` development branch includes a PyO3 prototype for Engine.IO and
+Socket.IO packet encoding and decoding. The native Socket.IO codec is enabled
+when the compiled extension is available. The experimental Engine.IO codec can
+be selected with `AsyncServer(..., rust_engineio=True)`.
+
+The code is measurably faster in codec-only tests, but the full ASGI WebSocket
+echo benchmark improved throughput by **1.13x**, not the required 2x. The
+project therefore does not claim a 2x end-to-end speedup and is not proceeding
+with a full Rust transport rewrite on this evidence. See
+[`benchmarks/README.md`](benchmarks/README.md) for the method and raw results.
+
 ## Installation
 
 ```bash

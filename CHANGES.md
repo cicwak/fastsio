@@ -1,5 +1,15 @@
 # python-socketio change log
 
+**fastsio 0.4.0 development** - unreleased
+
+- Added an ABI3 PyO3 extension with Engine.IO and Socket.IO packet codecs.
+- Added an opt-in `rust_engineio=True` server option for the experimental
+  Engine.IO codec. The installation is process-wide because python-engineio
+  does not expose a packet codec interface.
+- Added reproducible codec and end-to-end ASGI WebSocket A/B benchmarks.
+- The end-to-end prototype improved median throughput by 1.13x on the reference
+  machine. This does not meet the 2x threshold for a full Rust rewrite.
+
 **Release 5.13.0** - 2025-04-12
 
 - Eliminate race conditions on disconnect [#1441](https://github.com/miguelgrinberg/python-socketio/issues/1441) ([commit](https://github.com/miguelgrinberg/python-socketio/commit/288ebb189d799a05bbc5979a834433034ea2939f))
