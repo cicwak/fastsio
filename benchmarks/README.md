@@ -18,9 +18,9 @@ The implementation has three optimization levels measured by the suite:
 supports sync/async Python handlers, typed injection, Pydantic validation,
 acknowledgements, connect/disconnect, namespaces, rooms, emits, and nested binary
 payloads in events, acknowledgements, and server emits. FastAPI-style nested
-`Depends()` graphs are compiled once at handler registration. Middleware,
-exception handlers, distributed adapters, and ASGI mounting remain on the
-parity roadmap.
+`Depends()` graphs, middleware filters, and typed exception handlers are
+compiled once at handler registration. Distributed adapters and ASGI mounting
+remain on the parity roadmap.
 
 ## Reproduce
 

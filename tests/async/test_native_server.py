@@ -4,7 +4,16 @@ from contextlib import suppress
 import aiohttp
 from pydantic import BaseModel
 
-from fastsio import AsyncClient, Auth, Depends, NativeServer, Reason, SocketID
+from fastsio import (
+    AsyncClient,
+    Auth,
+    BaseMiddleware,
+    Depends,
+    Event,
+    NativeServer,
+    Reason,
+    SocketID,
+)
 from fastsio.exceptions import ConnectionError as SocketIOConnectionError
 
 
@@ -230,6 +239,75 @@ async def test_native_server_compiled_dependencies(unused_tcp_port):
         assert second_acknowledgement.startswith("438")
         assert '"uncached":"AGAIN"' in second_acknowledgement
         assert calls == {"message": 4, "enriched": 2}
+    finally:
+        await websocket.close()
+        await session.close()
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
+
+
+async def test_native_server_middleware_and_exception_handlers(unused_tcp_port):
+    class ApplicationError(Exception):
+        pass
+
+    class SpecificError(ApplicationError):
+        pass
+
+    class MarkerMiddleware(BaseMiddleware):
+        async def before_event(self, _event, _sid, data, *_args, **_kwargs):
+            return {**data, "before": True}
+
+        async def after_event(self, _event, _sid, response, *_args, **_kwargs):
+            return {**response, "after": True}
+
+    server = NativeServer()
+
+    @server.on("pipeline")
+    async def pipeline(_sid, data):
+        return data
+
+    @server.on("boom")
+    def boom(_sid, _data):
+        raise SpecificError("spark")
+
+    server.add_middleware(MarkerMiddleware(events="pipeline"))
+
+    @server.exception_handler(ApplicationError)
+    def handle_application_error(_exc: ApplicationError):
+        return {"handler": "base"}
+
+    @server.exception_handler(SpecificError)
+    async def handle_specific_error(
+        server: NativeServer,
+        sid: SocketID,
+        event: Event,
+        exc: SpecificError,
+    ):
+        await asyncio.sleep(0)
+        assert server is not None
+        return {
+            "handler": "specific",
+            "sid": str(sid),
+            "event": str(event),
+            "message": str(exc),
+        }
+
+    task = asyncio.create_task(server.serve(port=unused_tcp_port))
+    session, websocket = await connect(unused_tcp_port)
+    try:
+        await websocket.send_str('429["pipeline",{"input":true}]')
+        middleware_ack = await receive_frame(websocket)
+        assert middleware_ack.startswith("439")
+        assert '"before":true' in middleware_ack
+        assert '"after":true' in middleware_ack
+
+        await websocket.send_str('4210["boom",{}]')
+        exception_ack = await receive_frame(websocket)
+        assert exception_ack.startswith("4310")
+        assert '"handler":"specific"' in exception_ack
+        assert '"event":"boom"' in exception_ack
+        assert '"message":"spark"' in exception_ack
     finally:
         await websocket.close()
         await session.close()

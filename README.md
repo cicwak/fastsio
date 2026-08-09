@@ -25,7 +25,9 @@ Python async handler. The transport-only ceiling is **5.77x** the baseline.
 
 The existing `AsyncServer` and `Server` APIs remain available for full backward
 compatibility. The native server is a separate high-performance mode while its
-feature surface is brought to parity. See
+feature surface is brought to parity. It already supports nested binary
+payloads, compiled `Depends()` graphs, event/namespace middleware filters, and
+typed exception handlers. See
 [`benchmarks/README.md`](benchmarks/README.md) for the method and raw results.
 
 ```python

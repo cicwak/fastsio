@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from . import _rust
 from .dependency import Depends
+from .middlewares import BaseMiddleware
 from .types import Auth, Data, Event, Reason, SocketID
 
 
@@ -111,6 +112,11 @@ class NativeServer:
         """Create an unbound native server."""
         self._native = _rust.NativeServer()
         self.handlers: dict[str, Callable[..., Any]] = {}
+        self.exception_handlers: dict[type[BaseException], Callable[..., Any]] = {}
+        self._compiled_exception_handlers: dict[
+            type[BaseException], Callable[..., Any]
+        ] = {}
+        self._middlewares: list[BaseMiddleware] = []
 
     def on(
         self,
@@ -123,11 +129,7 @@ class NativeServer:
         def register(callback: Callable[..., Any]) -> Callable[..., Any]:
             key = f"{namespace}:{event}"
             self.handlers[key] = callback
-            self._native.on(
-                event,
-                self._compile_handler(callback, event),
-                namespace,
-            )
+            self._register_native_handler(event, callback, namespace)
             return callback
 
         return register(handler) if handler is not None else register
@@ -161,6 +163,180 @@ class NativeServer:
     async def disconnect(self, sid: str) -> None:
         """Disconnect a socket."""
         self._native.disconnect(sid)
+
+    def exception_handler(
+        self,
+        exception_class: type[BaseException],
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a typed handler for regular event exceptions."""
+        if not isinstance(exception_class, type) or not issubclass(
+            exception_class, BaseException
+        ):
+            raise ValueError(
+                "Exception handler must be registered for an exception class"
+            )
+
+        def register(callback: Callable[..., Any]) -> Callable[..., Any]:
+            self.exception_handlers[exception_class] = callback
+            self._compiled_exception_handlers[exception_class] = (
+                self._compile_exception_handler(callback)
+            )
+            self._refresh_native_handlers()
+            return callback
+
+        return register
+
+    def add_middleware(
+        self,
+        middleware: BaseMiddleware,
+        events: str | list[str] | None = None,
+        namespace: str | None = None,
+        global_middleware: bool = False,
+    ) -> None:
+        """Add middleware and compile its event/namespace filters."""
+        if events is not None:
+            middleware.events = {events} if isinstance(events, str) else set(events)
+        if namespace is not None:
+            middleware.namespace = namespace
+        if global_middleware:
+            middleware.global_middleware = True
+        self._middlewares.append(middleware)
+        self._refresh_native_handlers()
+
+    def remove_middleware(self, middleware: BaseMiddleware) -> None:
+        """Remove middleware if registered."""
+        if middleware in self._middlewares:
+            self._middlewares.remove(middleware)
+            self._refresh_native_handlers()
+
+    def get_middlewares(self) -> list[BaseMiddleware]:
+        """Return a copy of registered middlewares."""
+        return self._middlewares.copy()
+
+    def _refresh_native_handlers(self) -> None:
+        for key, callback in self.handlers.items():
+            namespace, event = key.split(":", 1)
+            self._register_native_handler(event, callback, namespace)
+
+    def _register_native_handler(
+        self,
+        event: str,
+        callback: Callable[..., Any],
+        namespace: str,
+    ) -> None:
+        self._native.on(
+            event,
+            self._compile_handler_pipeline(callback, event, namespace),
+            namespace,
+        )
+
+    def _compile_handler_pipeline(
+        self,
+        callback: Callable[..., Any],
+        event: str,
+        namespace: str,
+    ) -> Callable[..., Any]:
+        handler = self._compile_handler(callback, event)
+        middlewares = tuple(
+            middleware
+            for middleware in self._middlewares
+            if middleware.should_run(event, namespace)
+        )
+        if middlewares:
+            middleware_handler = handler
+
+            async def dispatch_with_middleware(socket_id: str, data: Any) -> Any:
+                current_data = data
+                auth = data if event == "connect" else None
+                for middleware in middlewares:
+                    current_data = middleware.before_event(
+                        event,
+                        socket_id,
+                        current_data,
+                        namespace,
+                        None,
+                        auth,
+                        self,
+                    )
+                    if inspect.isawaitable(current_data):
+                        current_data = await current_data
+
+                response = middleware_handler(socket_id, current_data)
+                if inspect.isawaitable(response):
+                    response = await response
+
+                for middleware in reversed(middlewares):
+                    response = middleware.after_event(
+                        event,
+                        socket_id,
+                        response,
+                        namespace,
+                        None,
+                        auth,
+                        self,
+                    )
+                    if inspect.isawaitable(response):
+                        response = await response
+                return response
+
+            handler = dispatch_with_middleware
+
+        if event not in {"connect", "disconnect"} and self.exception_handlers:
+            event_handler = handler
+
+            async def dispatch_with_exception_handler(
+                socket_id: str,
+                data: Any,
+            ) -> Any:
+                try:
+                    response = event_handler(socket_id, data)
+                    return await response if inspect.isawaitable(response) else response
+                except Exception as exc:
+                    for exception_type in type(exc).__mro__:
+                        exception_handler = self._compiled_exception_handlers.get(
+                            exception_type
+                        )
+                        if exception_handler is not None:
+                            response = exception_handler(socket_id, exc, event)
+                            return (
+                                await response
+                                if inspect.isawaitable(response)
+                                else response
+                            )
+                    raise
+
+            handler = dispatch_with_exception_handler
+        return handler
+
+    def _compile_exception_handler(
+        self,
+        callback: Callable[..., Any],
+    ) -> Callable[[str, BaseException, str], Any]:
+        parameters = tuple(inspect.signature(callback).parameters.values())
+
+        def dispatch(socket_id: str, exc: BaseException, event: str) -> Any:
+            values: dict[str, Any] = {}
+            for parameter in parameters:
+                annotation = parameter.annotation
+                if annotation is SocketID or parameter.name in {"sid", "socket_id"}:
+                    values[parameter.name] = SocketID(socket_id)
+                elif (
+                    isinstance(annotation, type)
+                    and issubclass(annotation, BaseException)
+                ) or parameter.name in {"exc", "exception"}:
+                    values[parameter.name] = exc
+                elif annotation is Event or parameter.name == "event":
+                    values[parameter.name] = Event(event)
+                elif annotation is NativeServer or parameter.name in {"server", "sio"}:
+                    values[parameter.name] = self
+                elif parameter.default is inspect.Parameter.empty:
+                    raise TypeError(
+                        "cannot resolve native exception handler parameter "
+                        f"{parameter.name!r}"
+                    )
+            return callback(**values)
+
+        return dispatch
 
     def _compile_handler(
         self,

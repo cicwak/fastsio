@@ -13,6 +13,8 @@
   nested binary payloads in events, acknowledgements, and server emits.
 - Native handlers compile nested `Depends()` graphs at registration time and
   use an event-scoped dependency cache during dispatch.
+- Added precompiled middleware pipelines with event/namespace filters and
+  most-specific typed exception handlers to `NativeServer`.
 - The native server with a real Python async handler improved median throughput
   by 3.55x on the reference workload, passing the 2x development gate. The pure
   Rust transport core reached 5.77x.
