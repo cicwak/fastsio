@@ -52,12 +52,12 @@ The current end-to-end medians across three 5-second runs were:
 
 | Variant | Events/s | p50 latency | p95 latency |
 | --- | ---: | ---: | ---: |
-| Python | 11,081.4 | 8.878 ms | 9.657 ms |
-| Rust codecs | 11,769.1 | 8.431 ms | 9.769 ms |
-| Native transport + Python async handler | 39,271.0 | 2.444 ms | 4.352 ms |
-| Native Rust core | 63,564.4 | 1.463 ms | 2.143 ms |
+| Python | 12,112.1 | 8.144 ms | 8.774 ms |
+| Rust codecs | 13,035.4 | 7.681 ms | 8.090 ms |
+| Native transport + Python async handler | 42,712.0 | 2.253 ms | 3.902 ms |
+| Native Rust core | 69,992.0 | 1.385 ms | 1.682 ms |
 
-Native Python throughput speedup: **3.544x**. Native core speedup: **5.736x**.
+Native Python throughput speedup: **3.526x**. Native core speedup: **5.779x**.
 Required threshold: **2.0x**.
 
 ## Verdict

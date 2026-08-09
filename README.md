@@ -19,9 +19,9 @@
 
 The `0.4.0` development branch adds `NativeServer`: a PyO3 API backed by a Rust
 Socket.IO/Engine.IO transport, connection state, and protocol core. In the
-reference end-to-end WebSocket benchmark it processes **3.54x more events per
+reference end-to-end WebSocket benchmark it processes **3.53x more events per
 second** than the compatible Python server while still executing a real typed
-Python async handler. The transport-only ceiling is **5.74x** the baseline.
+Python async handler. The transport-only ceiling is **5.78x** the baseline.
 
 The existing `AsyncServer` and `Server` APIs remain available for full backward
 compatibility. The native server is a separate high-performance mode while its

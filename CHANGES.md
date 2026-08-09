@@ -18,8 +18,8 @@
 - Added optional Redis 7+ RESP3 distribution for cross-process broadcasts and
   room operations in the Rust native server.
 - The native server with a real Python async handler improved median throughput
-  by 3.54x on the reference workload, passing the 2x development gate. The pure
-  Rust transport core reached 5.74x.
+  by 3.53x on the reference workload, passing the 2x development gate. The pure
+  Rust transport core reached 5.78x.
 
 **Release 5.13.0** - 2025-04-12
 
